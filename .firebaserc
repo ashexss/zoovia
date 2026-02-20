@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "zoovia-50573"
+  },
+  "targets": {
+    "zoovia-50573": {
+      "hosting": {
+        "landing": ["zoovia-landing"],
+        "admin": ["zoovia-50573"]
+      }
+    }
   }
 }
