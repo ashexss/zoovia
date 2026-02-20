@@ -1,0 +1,147 @@
+<mat-card>
+    <mat-card-header>
+        <mat-card-title>
+            <div class="header-container">
+                <h2>Gestión de Mascotas</h2>
+                <button mat-raised-button color="primary" routerLink="/dashboard/pets/new">
+                    <mat-icon>add</mat-icon>
+                    Nueva Mascota
+                </button>
+            </div>
+        </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+        <!-- Search bar -->
+        <div class="search-container">
+            <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Buscar mascotas</mat-label>
+                <input matInput [formControl]="searchControl" placeholder="Nombre, raza o microchip...">
+                <mat-icon matPrefix>search</mat-icon>
+                @if (searchControl.value) {
+                <button matSuffix mat-icon-button (click)="searchControl.setValue('')">
+                    <mat-icon>close</mat-icon>
+                </button>
+                }
+            </mat-form-field>
+        </div>
+
+        <!-- Loading spinner -->
+        @if (loading) {
+        <div class="loading-container">
+            <mat-spinner diameter="50"></mat-spinner>
+        </div>
+        }
+
+        <!-- Table -->
+        @if (!loading) {
+        <div class="table-container">
+            <table mat-table [dataSource]="dataSource" matSort class="pets-table">
+
+                <!-- Photo Column -->
+                <ng-container matColumnDef="photo">
+                    <th mat-header-cell *matHeaderCellDef>Foto</th>
+                    <td mat-cell *matCellDef="let pet">
+                        <div class="pet-photo">
+                            @if (pet.photo) {
+                            <img [src]="pet.photo" [alt]="pet.name">
+                            } @else {
+                            <mat-icon [class]="'species-icon ' + pet.species">{{ getSpeciesIcon(pet.species)
+                                }}</mat-icon>
+                            }
+                        </div>
+                    </td>
+                </ng-container>
+
+                <!-- Name Column -->
+                <ng-container matColumnDef="name">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+                    <td mat-cell *matCellDef="let pet">
+                        <strong>{{ pet.name }}</strong>
+                    </td>
+                </ng-container>
+
+                <!-- Species Column -->
+                <ng-container matColumnDef="species">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Especie</th>
+                    <td mat-cell *matCellDef="let pet">
+                        <mat-chip class="species-chip">
+                            <mat-icon>{{ getSpeciesIcon(pet.species) }}</mat-icon>
+                            {{ getSpeciesLabel(pet.species) }}
+                        </mat-chip>
+                    </td>
+                </ng-container>
+
+                <!-- Breed Column -->
+                <ng-container matColumnDef="breed">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Raza</th>
+                    <td mat-cell *matCellDef="let pet">{{ pet.breed }}</td>
+                </ng-container>
+
+                <!-- Owner Column -->
+                <ng-container matColumnDef="owner">
+                    <th mat-header-cell *matHeaderCellDef>Dueño</th>
+                    <td mat-cell *matCellDef="let pet">
+                        <a [routerLink]="['/dashboard/clients', pet.clientId]" class="owner-link">
+                            {{ getOwnerName(pet.clientId) }}
+                        </a>
+                    </td>
+                </ng-container>
+
+                <!-- Age Column -->
+                <ng-container matColumnDef="age">
+                    <th mat-header-cell *matHeaderCellDef>Edad</th>
+                    <td mat-cell *matCellDef="let pet">{{ getPetAge(pet.birthDate) }}</td>
+                </ng-container>
+
+                <!-- Weight Column -->
+                <ng-container matColumnDef="weight">
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>Peso</th>
+                    <td mat-cell *matCellDef="let pet">{{ pet.weight }} kg</td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                    <th mat-header-cell *matHeaderCellDef>Acciones</th>
+                    <td mat-cell *matCellDef="let pet">
+                        <button mat-icon-button [routerLink]="['/dashboard/pets', pet.id]" matTooltip="Ver detalles">
+                            <mat-icon>visibility</mat-icon>
+                        </button>
+                        <button mat-icon-button [routerLink]="['/dashboard/pets', pet.id, 'edit']" matTooltip="Editar">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="deletePet(pet)" matTooltip="Eliminar" color="warn">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="pet-row"></tr>
+
+                <!-- No data row -->
+                <tr class="mat-row" *matNoDataRow>
+                    <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+                        <div class="no-data">
+                            @if (searchControl.value) {
+                            <mat-icon>search_off</mat-icon>
+                            <p>No se encontraron mascotas que coincidan con "{{ searchControl.value }}"</p>
+                            } @else {
+                            <mat-icon>pets</mat-icon>
+                            <p>No hay mascotas registradas</p>
+                            <button mat-raised-button color="primary" routerLink="/dashboard/pets/new">
+                                Registrar primera mascota
+                            </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Paginator -->
+        <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" [pageSize]="25" showFirstLastButtons>
+        </mat-paginator>
+        }
+    </mat-card-content>
+</mat-card>

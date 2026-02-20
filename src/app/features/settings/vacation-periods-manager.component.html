@@ -1,0 +1,82 @@
+<div class="vacation-periods-manager">
+    <div class="header">
+        <h3>Períodos de Vacaciones</h3>
+        <button mat-raised-button color="primary" (click)="startAdding()" *ngIf="!isAdding">
+            <mat-icon>add</mat-icon>
+            Agregar Período
+        </button>
+    </div>
+
+    <!-- Add Form -->
+    <div *ngIf="isAdding" class="add-form">
+        <form [formGroup]="vacationForm" (ngSubmit)="addVacationPeriod()">
+            <div class="form-row">
+                <mat-form-field appearance="outline">
+                    <mat-label>Fecha de Inicio</mat-label>
+                    <input matInput [matDatepicker]="startPicker" formControlName="startDate"
+                        placeholder="Seleccionar fecha">
+                    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #startPicker></mat-datepicker>
+                    <mat-error *ngIf="vacationForm.get('startDate')?.hasError('required')">
+                        La fecha de inicio es requerida
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                    <mat-label>Fecha de Fin</mat-label>
+                    <input matInput [matDatepicker]="endPicker" formControlName="endDate"
+                        placeholder="Seleccionar fecha">
+                    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                    <mat-datepicker #endPicker></mat-datepicker>
+                    <mat-error *ngIf="vacationForm.get('endDate')?.hasError('required')">
+                        La fecha de fin es requerida
+                    </mat-error>
+                    <mat-error *ngIf="!isDateRangeValid()">
+                        La fecha de fin debe ser posterior a la de inicio
+                    </mat-error>
+                </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Motivo</mat-label>
+                <input matInput formControlName="reason" placeholder="Ej: Vacaciones de verano">
+                <mat-icon matPrefix>beach_access</mat-icon>
+                <mat-error *ngIf="vacationForm.get('reason')?.hasError('required')">
+                    El motivo es requerido
+                </mat-error>
+            </mat-form-field>
+
+            <div class="form-actions">
+                <button mat-button type="button" (click)="cancelAdding()">
+                    Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="submit"
+                    [disabled]="vacationForm.invalid || !isDateRangeValid()">
+                    <mat-icon>save</mat-icon>
+                    Guardar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Vacation Periods List -->
+    <mat-list *ngIf="vacationPeriods.length > 0" class="periods-list">
+        <mat-list-item *ngFor="let period of vacationPeriods; let i = index">
+            <mat-icon matListItemIcon color="primary">beach_access</mat-icon>
+            <div matListItemTitle>
+                {{ formatDisplayDate(period.startDate) }} - {{ formatDisplayDate(period.endDate) }}
+                <span class="duration">({{ calculateDuration(period) }} días)</span>
+            </div>
+            <div matListItemLine>{{ period.reason }}</div>
+            <button mat-icon-button matListItemMeta color="warn" (click)="removeVacationPeriod(i)"
+                matTooltip="Eliminar">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </mat-list-item>
+    </mat-list>
+
+    <div *ngIf="vacationPeriods.length === 0 && !isAdding" class="empty-state">
+        <mat-icon>event_available</mat-icon>
+        <p>No hay períodos de vacaciones configurados</p>
+    </div>
+</div>

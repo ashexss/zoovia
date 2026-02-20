@@ -1,0 +1,146 @@
+<mat-card>
+    <mat-card-header>
+        <mat-card-title>
+            <div class="header-container">
+                <h2>{{ isEditMode ? 'Editar Cliente' : 'Nuevo Cliente' }}</h2>
+                <button mat-icon-button (click)="onCancel()" matTooltip="Volver">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
+        </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+        @if (loading) {
+        <div class="loading-container">
+            <mat-spinner diameter="50"></mat-spinner>
+        </div>
+        }
+
+        @if (!loading) {
+        <form [formGroup]="clientForm" (ngSubmit)="onSubmit()" class="client-form">
+            <!-- Personal Information Section -->
+            <div class="form-section">
+                <h3>Información Personal</h3>
+
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Nombre</mat-label>
+                        <input matInput formControlName="firstName">
+                        <mat-icon matPrefix>person</mat-icon>
+                        @if (clientForm.get('firstName')?.invalid && clientForm.get('firstName')?.touched) {
+                        <mat-error>{{ getErrorMessage('firstName') }}</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Apellido</mat-label>
+                        <input matInput formControlName="lastName">
+                        @if (clientForm.get('lastName')?.invalid && clientForm.get('lastName')?.touched) {
+                        <mat-error>{{ getErrorMessage('lastName') }}</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>DNI / Identificación</mat-label>
+                        <input matInput formControlName="identificationNumber">
+                        <mat-icon matPrefix>badge</mat-icon>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="form-section">
+                <h3>Información de Contacto</h3>
+
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Email</mat-label>
+                        <input matInput type="email" formControlName="email">
+                        <mat-icon matPrefix>email</mat-icon>
+                        @if (clientForm.get('email')?.invalid && clientForm.get('email')?.touched) {
+                        <mat-error>{{ getErrorMessage('email') }}</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Teléfono</mat-label>
+                        <input matInput formControlName="phone">
+                        <mat-icon matPrefix>phone</mat-icon>
+                        @if (clientForm.get('phone')?.invalid && clientForm.get('phone')?.touched) {
+                        <mat-error>{{ getErrorMessage('phone') }}</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>WhatsApp (opcional)</mat-label>
+                        <input matInput formControlName="whatsapp">
+                        <mat-icon matPrefix>chat</mat-icon>
+                        @if (clientForm.get('whatsapp')?.invalid && clientForm.get('whatsapp')?.touched) {
+                        <mat-error>{{ getErrorMessage('whatsapp') }}</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Address Section -->
+            <div class="form-section">
+                <h3>Dirección</h3>
+
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="form-field full-width">
+                        <mat-label>Dirección</mat-label>
+                        <input matInput formControlName="address">
+                        <mat-icon matPrefix>home</mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <div class="form-row">
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>Ciudad</mat-label>
+                        <input matInput formControlName="city">
+                        <mat-icon matPrefix>location_city</mat-icon>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <!-- Notification Preferences Section -->
+            <div class="form-section">
+                <h3>Preferencias de Notificación</h3>
+
+                <div formGroupName="notificationPreferences" class="checkbox-group">
+                    <mat-checkbox formControlName="email">
+                        <mat-icon>email</mat-icon>
+                        Email
+                    </mat-checkbox>
+                    <mat-checkbox formControlName="sms">
+                        <mat-icon>sms</mat-icon>
+                        SMS
+                    </mat-checkbox>
+                    <mat-checkbox formControlName="whatsapp">
+                        <mat-icon>chat</mat-icon>
+                        WhatsApp
+                    </mat-checkbox>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button mat-button type="button" (click)="onCancel()" [disabled]="saving">
+                    Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="submit" [disabled]="saving || clientForm.invalid">
+                    @if (saving) {
+                    <mat-spinner diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+                    }
+                    {{ isEditMode ? 'Actualizar' : 'Crear' }} Cliente
+                </button>
+            </div>
+        </form>
+        }
+    </mat-card-content>
+</mat-card>

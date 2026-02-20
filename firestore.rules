@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user belongs to the veterinary
+    function belongsToVeterinary(veterinaryId) {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.veterinaryId == veterinaryId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Clients collection
+    match /clients/{clientId} {
+      allow read: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
+    }
+    
+    // Pets collection
+    match /pets/{petId} {
+      allow read: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
+    }
+    
+    // Medical Records collection
+    match /medicalRecords/{recordId} {
+      allow read: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
+    }
+    
+    // Veterinaries collection
+    match /veterinaries/{vetId} {
+      // Users can read their own veterinary data
+      allow read: if isAuthenticated() && belongsToVeterinary(vetId);
+      // Users can update their own veterinary data
+      allow update: if isAuthenticated() && belongsToVeterinary(vetId);
+      // Only allow creation and deletion through admin/backend
+      allow create, delete: if false;
+    }
+  }
+}

@@ -1,0 +1,113 @@
+.business-hours-editor {
+    .day-section {
+        margin-bottom: 24px;
+        padding: 16px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border-left: 4px solid #00897b;
+
+        .day-header {
+            margin-bottom: 16px;
+
+            mat-slide-toggle {
+                font-size: 1rem;
+
+                strong {
+                    font-weight: 600;
+                    color: #333;
+                }
+            }
+        }
+
+        .shifts-container {
+            padding-left: 32px;
+
+            .shift-row {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+                position: relative;
+
+                .time-field {
+                    flex: 1;
+                    max-width: 180px;
+                }
+
+                .separator {
+                    font-weight: 600;
+                    color: #666;
+                    margin: 0 8px;
+                }
+
+                button[mat-icon-button] {
+                    flex-shrink: 0;
+                }
+
+                .shift-error {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    color: #d32f2f;
+                    font-size: 0.75rem;
+                    margin-top: 4px;
+
+                    mat-icon {
+                        font-size: 16px;
+                        width: 16px;
+                        height: 16px;
+                    }
+                }
+            }
+
+            .add-shift-btn {
+                margin-top: 8px;
+
+                mat-icon {
+                    margin-right: 4px;
+                }
+            }
+        }
+
+        .closed-message {
+            padding-left: 32px;
+            color: #999;
+            font-style: italic;
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .business-hours-editor {
+        .day-section {
+            .shifts-container {
+                padding-left: 16px;
+
+                .shift-row {
+                    flex-wrap: wrap;
+
+                    .time-field {
+                        max-width: 140px;
+                    }
+
+                    button[mat-icon-button] {
+                        order: 3;
+                    }
+
+                    .shift-error {
+                        width: 100%;
+                        order: 4;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check user role
+    function hasRole(role) {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+    
+    // Pet photos
+    match /pets/{petId}/{fileName} {
+      // Anyone authenticated can read pet photos
+      allow read: if isAuthenticated();
+      // Staff can upload/update pet photos
+      allow write: if hasRole('admin') || hasRole('veterinarian') || hasRole('assistant');
+    }
+    
+    // Medical record attachments
+    match /medical-records/{recordId}/{fileName} {
+      // Staff can read attachments
+      allow read: if hasRole('admin') || hasRole('veterinarian') || hasRole('assistant');
+      // Only veterinarians can upload attachments
+      allow write: if hasRole('admin') || hasRole('veterinarian');
+    }
+    
+    // Veterinary logos
+    match /veterinaries/{veterinaryId}/logo {
+      // Anyone can read logos
+      allow read: if true;
+      // Only admins can upload logos
+      allow write: if hasRole('admin');
+    }
+    
+    // Adoption photos
+    match /adoptions/{adoptionId}/{fileName} {
+      // Public read
+      allow read: if true;
+      // Staff can upload
+      allow write: if hasRole('admin') || hasRole('veterinarian') || hasRole('assistant');
+    }
+    
+    // Lost/Found pet photos
+    match /lost-found/{petId}/{fileName} {
+      // Public read
+      allow read: if true;
+      // Authenticated users can upload
+      allow write: if isAuthenticated();
+    }
+  }
+}

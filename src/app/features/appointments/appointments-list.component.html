@@ -1,0 +1,302 @@
+<div class="appointments-page">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-left">
+            <h2>
+                <mat-icon>event</mat-icon>
+                Turnos
+                @if (!isToday) {
+                <span class="date-badge">{{ formattedDate | titlecase }}</span>
+                } @else {
+                <span class="date-badge today">Hoy — {{ formattedDate | titlecase }}</span>
+                }
+            </h2>
+            <div class="date-nav">
+                <button mat-icon-button (click)="goToPreviousDay()" matTooltip="Día anterior">
+                    <mat-icon>chevron_left</mat-icon>
+                </button>
+                <button mat-stroked-button (click)="goToToday()" [disabled]="isToday">
+                    Hoy
+                </button>
+                <button mat-icon-button (click)="goToNextDay()" matTooltip="Día siguiente">
+                    <mat-icon>chevron_right</mat-icon>
+                </button>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button mat-raised-button color="primary" routerLink="new">
+                <mat-icon>add</mat-icon> Nuevo Turno
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary chips -->
+    <div class="status-summary">
+        <div class="summary-chip waiting">
+            <mat-icon>schedule</mat-icon>
+            <strong>{{ waiting.length }}</strong> esperando
+        </div>
+        <div class="summary-chip in-progress">
+            <mat-icon>medical_services</mat-icon>
+            <strong>{{ inProgress.length }}</strong> en atención
+        </div>
+        <div class="summary-chip scheduled">
+            <mat-icon>event</mat-icon>
+            <strong>{{ scheduled.length }}</strong> agendados
+        </div>
+        <div class="summary-chip completed">
+            <mat-icon>check_circle</mat-icon>
+            <strong>{{ completed.length }}</strong> atendidos
+        </div>
+    </div>
+
+    <!-- Loading -->
+    @if (loading) {
+    <div class="loading"><mat-spinner diameter="40"></mat-spinner></div>
+    }
+
+    <!-- Main layout: list + detail panel -->
+    @if (!loading) {
+    <div class="content-layout" [class.with-panel]="selectedAppointment">
+
+        <!-- Appointments List -->
+        <div class="list-section">
+
+            <!-- Empty State -->
+            @if (appointments.length === 0) {
+            <div class="empty-state">
+                <mat-icon>event_available</mat-icon>
+                <h3>Sin turnos para este día</h3>
+                <p>Registrá un walk-in o agendá un turno nuevo</p>
+                <button mat-raised-button color="primary" routerLink="new">
+                    <mat-icon>add</mat-icon> Registrar turno
+                </button>
+            </div>
+            }
+
+            <!-- IN PROGRESS (always at top) -->
+            @if (inProgress.length > 0) {
+            <div class="group-label in-progress">
+                <mat-icon>medical_services</mat-icon> En atención
+            </div>
+            @for (a of inProgress; track a.id) {
+            <div class="appointment-card in-progress" [class.selected]="selectedAppointment?.id === a.id"
+                (click)="selectAppointment(a)">
+                <div class="card-left">
+                    <span class="pet-emoji">{{ getPetIcon(a.petSpecies) }}</span>
+                    <div class="pet-info">
+                        <strong>{{ a.petName }}</strong>
+                        <span>{{ a.clientName }}</span>
+                        <span class="reason">{{ a.reason }}</span>
+                    </div>
+                </div>
+                <div class="card-right">
+                    @if (a.startTime) {
+                    <span class="time-badge">desde {{ a.startTime }}</span>
+                    }
+                    <button mat-raised-button color="primary" class="action-btn"
+                        (click)="markCompleted(a); $event.stopPropagation()">
+                        <mat-icon>check</mat-icon> Finalizar
+                    </button>
+                </div>
+            </div>
+            }
+            }
+
+            <!-- WAITING -->
+            @if (waiting.length > 0) {
+            <div class="group-label waiting">
+                <mat-icon>schedule</mat-icon> Esperando ({{ waiting.length }})
+            </div>
+            @for (a of waiting; track a.id) {
+            <div class="appointment-card waiting" [class.selected]="selectedAppointment?.id === a.id"
+                (click)="selectAppointment(a)">
+                <div class="card-left">
+                    <span class="queue-number">{{ $index + 1 }}</span>
+                    <span class="pet-emoji">{{ getPetIcon(a.petSpecies) }}</span>
+                    <div class="pet-info">
+                        <strong>{{ a.petName }}</strong>
+                        <span>{{ a.clientName }}</span>
+                        <span class="reason">{{ a.reason }}</span>
+                    </div>
+                </div>
+                <div class="card-right">
+                    @if (a.arrivalTime) {
+                    <span class="time-badge">llegó {{ a.arrivalTime }}</span>
+                    }
+                    @if (a.priority === 'urgent') {
+                    <span class="priority-badge urgent">URGENTE</span>
+                    }
+                    <button mat-raised-button color="accent" class="action-btn"
+                        (click)="markInProgress(a); $event.stopPropagation()">
+                        <mat-icon>play_arrow</mat-icon> Atender
+                    </button>
+                </div>
+            </div>
+            }
+            }
+
+            <!-- SCHEDULED (pre-agendados aún no llegaron) -->
+            @if (scheduled.length > 0) {
+            <div class="group-label scheduled">
+                <mat-icon>event</mat-icon> Agendados
+            </div>
+            @for (a of scheduled; track a.id) {
+            <div class="appointment-card scheduled" [class.selected]="selectedAppointment?.id === a.id"
+                (click)="selectAppointment(a)">
+                <div class="card-left">
+                    @if (a.scheduledTime) {
+                    <span class="scheduled-time">{{ a.scheduledTime }}</span>
+                    }
+                    <span class="pet-emoji">{{ getPetIcon(a.petSpecies) }}</span>
+                    <div class="pet-info">
+                        <strong>{{ a.petName }}</strong>
+                        <span>{{ a.clientName }}</span>
+                        <span class="reason">{{ a.reason }}</span>
+                    </div>
+                </div>
+                <div class="card-right">
+                    @if (a.priority === 'urgent') {
+                    <span class="priority-badge urgent">URGENTE</span>
+                    }
+                    <div class="action-group">
+                        <button mat-stroked-button class="action-btn small"
+                            (click)="markWaiting(a); $event.stopPropagation()">
+                            <mat-icon>person_add</mat-icon> Llegó
+                        </button>
+                        <button mat-icon-button [matMenuTriggerFor]="moreMenu" (click)="$event.stopPropagation()"
+                            matTooltip="Más opciones">
+                            <mat-icon>more_vert</mat-icon>
+                        </button>
+                        <mat-menu #moreMenu="matMenu">
+                            <button mat-menu-item (click)="markNoShow(a)">
+                                <mat-icon>person_off</mat-icon> No se presentó
+                            </button>
+                            <button mat-menu-item (click)="markCancelled(a)">
+                                <mat-icon>cancel</mat-icon> Cancelar
+                            </button>
+                        </mat-menu>
+                    </div>
+                </div>
+            </div>
+            }
+            }
+
+            <!-- COMPLETED (finalizados, collapsible) -->
+            @if (completed.length > 0) {
+            <div class="group-label completed">
+                <mat-icon>check_circle</mat-icon> Atendidos hoy ({{ completed.length }})
+            </div>
+            @for (a of completed; track a.id) {
+            <div class="appointment-card completed" (click)="selectAppointment(a)">
+                <div class="card-left">
+                    <span class="pet-emoji muted">{{ getPetIcon(a.petSpecies) }}</span>
+                    <div class="pet-info muted">
+                        <strong>{{ a.petName }}</strong>
+                        <span>{{ a.clientName }}</span>
+                        <span class="reason">{{ a.reason }}</span>
+                    </div>
+                </div>
+                <div class="card-right">
+                    @if (a.startTime && a.endTime) {
+                    <span class="time-badge muted">{{ a.startTime }} – {{ a.endTime }}</span>
+                    }
+                </div>
+            </div>
+            }
+            }
+
+        </div>
+
+        <!-- Detail Side Panel -->
+        @if (selectedAppointment) {
+        <div class="detail-panel">
+            <div class="panel-header">
+                <h3>
+                    {{ getPetIcon(selectedAppointment.petSpecies) }}
+                    {{ selectedAppointment.petName }}
+                </h3>
+                <button mat-icon-button (click)="closePanel()">
+                    <mat-icon>close</mat-icon>
+                </button>
+            </div>
+
+            <div class="panel-body">
+                <div class="panel-row">
+                    <mat-icon>person</mat-icon>
+                    <span>{{ selectedAppointment.clientName }}</span>
+                </div>
+                <div class="panel-row">
+                    <mat-icon>healing</mat-icon>
+                    <span>{{ selectedAppointment.reason }}</span>
+                </div>
+                @if (selectedAppointment.notes) {
+                <div class="panel-row">
+                    <mat-icon>notes</mat-icon>
+                    <span>{{ selectedAppointment.notes }}</span>
+                </div>
+                }
+                <div class="panel-row">
+                    <mat-icon>info</mat-icon>
+                    <span class="status-tag" [class]="getStatusClass(selectedAppointment.status)">
+                        {{ getStatusLabel(selectedAppointment.status) }}
+                    </span>
+                    @if (selectedAppointment.isWalkIn) {
+                    <span class="walk-in-tag">Walk-in</span>
+                    }
+                    @if (selectedAppointment.priority === 'urgent') {
+                    <span class="urgent-tag">URGENTE</span>
+                    }
+                </div>
+                @if (selectedAppointment.arrivalTime) {
+                <div class="panel-row">
+                    <mat-icon>login</mat-icon>
+                    <span>Llegó: {{ selectedAppointment.arrivalTime }}</span>
+                </div>
+                }
+                @if (selectedAppointment.scheduledTime && !selectedAppointment.isWalkIn) {
+                <div class="panel-row">
+                    <mat-icon>schedule</mat-icon>
+                    <span>Turno: {{ selectedAppointment.scheduledTime }}</span>
+                </div>
+                }
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <!-- Actions -->
+            <div class="panel-actions">
+                @switch (selectedAppointment.status) {
+                @case ('scheduled') {
+                <button mat-raised-button color="primary" (click)="markWaiting(selectedAppointment)">
+                    <mat-icon>person_add</mat-icon> Marcar "Llegó"
+                </button>
+                }
+                @case ('waiting') {
+                <button mat-raised-button color="accent" (click)="markInProgress(selectedAppointment)">
+                    <mat-icon>play_arrow</mat-icon> Iniciar atención
+                </button>
+                }
+                @case ('in_progress') {
+                <button mat-raised-button color="primary" (click)="markCompleted(selectedAppointment)">
+                    <mat-icon>check</mat-icon> Finalizar
+                </button>
+                }
+                }
+                <button mat-button (click)="navigateToMedicalRecord(selectedAppointment)">
+                    <mat-icon>medical_services</mat-icon> Ver historial
+                </button>
+                @if (!['completed', 'cancelled', 'no_show'].includes(selectedAppointment.status)) {
+                <button mat-button color="warn" (click)="markCancelled(selectedAppointment)">
+                    <mat-icon>cancel</mat-icon> Cancelar turno
+                </button>
+                }
+            </div>
+        </div>
+        }
+
+    </div>
+    } <!-- end !loading -->
+
+</div>

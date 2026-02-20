@@ -1,0 +1,345 @@
+<div class="settings-container">
+    <div class="settings-header">
+        <h1>Configuración</h1>
+        <p>Administrá la información y suscripción de tu veterinaria</p>
+    </div>
+
+    <mat-tab-group animationDuration="200ms" class="settings-tabs">
+
+        <!-- TAB 1: General Configuration -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon>settings</mat-icon>&nbsp;Configuración
+            </ng-template>
+
+            <div *ngIf="loading" class="loading-container">
+                <mat-spinner></mat-spinner>
+                <p>Cargando información...</p>
+            </div>
+
+            <!-- Permissions Error Message -->
+            <div *ngIf="!loading && hasPermissionError" class="error-container">
+                <mat-icon class="error-icon">lock</mat-icon>
+                <h2>Error de Permisos de Firestore</h2>
+                <p>No se pudo cargar la información de la veterinaria porque faltan las reglas de seguridad de
+                    Firestore.</p>
+
+                <div class="error-steps">
+                    <h3>Pasos para solucionar:</h3>
+                    <ol>
+                        <li>Abrí <a href="https://console.firebase.google.com/project/zoovia-50573/firestore/rules"
+                                target="_blank">Firebase Console - Firestore Rules</a></li>
+                        <li>Agregá las reglas de seguridad para la colección <code>veterinaries</code></li>
+                        <li>Publicá los cambios</li>
+                        <li>Recargá esta página</li>
+                    </ol>
+
+                    <div class="code-example">
+                        <h4>Reglas mínimas necesarias:</h4>
+                        <pre><code>match /veterinaries/&#123;vetId&#125; &#123;
+  allow read, write: if request.auth != null;
+&#125;</code></pre>
+                    </div>
+
+                    <p class="help-text">
+                        <mat-icon>info</mat-icon>
+                        Para más detalles, consultá la guía de configuración completa que te compartí anteriormente.
+                    </p>
+                </div>
+            </div>
+
+            <div *ngIf="!loading && veterinary" class="settings-content">
+
+                <!-- General Information -->
+                <mat-card class="settings-card">
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>business</mat-icon>
+                        <mat-card-title>Información General</mat-card-title>
+                        <mat-card-subtitle>Datos básicos de la veterinaria</mat-card-subtitle>
+                    </mat-card-header>
+
+                    <mat-card-content>
+                        <form [formGroup]="generalForm">
+                            <!-- Logo Upload -->
+                            <div class="logo-section">
+                                <div class="logo-preview">
+                                    <img *ngIf="logoPreview" [src]="logoPreview" alt="Logo">
+                                    <mat-icon *ngIf="!logoPreview">add_photo_alternate</mat-icon>
+                                </div>
+                                <div class="logo-actions">
+                                    <input type="file" #logoInput accept="image/*" (change)="onLogoSelected($event)"
+                                        style="display: none">
+                                    <button mat-raised-button color="primary" (click)="logoInput.click()">
+                                        <mat-icon>upload</mat-icon>
+                                        {{ logoPreview ? 'Cambiar Logo' : 'Subir Logo' }}
+                                    </button>
+                                    <p class="hint">Tamaño máximo: 2MB. Formatos: JPG, PNG</p>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <mat-form-field appearance="outline" class="full-width">
+                                    <mat-label>Nombre de la Veterinaria</mat-label>
+                                    <input matInput formControlName="name" placeholder="Ej: Veterinaria San Martín">
+                                    <mat-icon matPrefix>business</mat-icon>
+                                    <mat-error *ngIf="generalForm.get('name')?.hasError('required')">
+                                        El nombre es requerido
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+
+                            <div class="form-row">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Teléfono</mat-label>
+                                    <input matInput formControlName="phone" placeholder="+54 11 1234-5678">
+                                    <mat-icon matPrefix>phone</mat-icon>
+                                    <mat-error *ngIf="generalForm.get('phone')?.hasError('required')">
+                                        El teléfono es requerido
+                                    </mat-error>
+                                </mat-form-field>
+
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Email</mat-label>
+                                    <input matInput type="email" formControlName="email"
+                                        placeholder="contacto@veterinaria.com">
+                                    <mat-icon matPrefix>email</mat-icon>
+                                    <mat-error *ngIf="generalForm.get('email')?.hasError('required')">
+                                        El email es requerido
+                                    </mat-error>
+                                    <mat-error *ngIf="generalForm.get('email')?.hasError('email')">
+                                        Email inválido
+                                    </mat-error>
+                                </mat-form-field>
+                            </div>
+                        </form>
+                    </mat-card-content>
+                </mat-card>
+
+                <!-- Address -->
+                <mat-card class="settings-card">
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>location_on</mat-icon>
+                        <mat-card-title>Dirección</mat-card-title>
+                        <mat-card-subtitle>Ubicación de la veterinaria</mat-card-subtitle>
+                    </mat-card-header>
+
+                    <mat-card-content>
+                        <form [formGroup]="addressForm">
+                            <div class="form-row">
+                                <mat-form-field appearance="outline" class="full-width">
+                                    <mat-label>Calle y Número</mat-label>
+                                    <input matInput formControlName="street" placeholder="Av. San Martín 1234">
+                                    <mat-icon matPrefix>home</mat-icon>
+                                </mat-form-field>
+                            </div>
+
+                            <div class="form-row">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Ciudad</mat-label>
+                                    <input matInput formControlName="city" placeholder="Buenos Aires">
+                                </mat-form-field>
+
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Provincia/Estado</mat-label>
+                                    <input matInput formControlName="state" placeholder="Buenos Aires">
+                                </mat-form-field>
+                            </div>
+
+                            <div class="form-row">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Código Postal</mat-label>
+                                    <input matInput formControlName="zipCode" placeholder="1234">
+                                </mat-form-field>
+
+                                <mat-form-field appearance="outline">
+                                    <mat-label>País</mat-label>
+                                    <input matInput formControlName="country" placeholder="Argentina">
+                                </mat-form-field>
+                            </div>
+                        </form>
+                    </mat-card-content>
+                </mat-card>
+
+                <!-- Business Hours -->
+                <mat-card class="settings-card">
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>schedule</mat-icon>
+                        <mat-card-title>Horarios de Atención</mat-card-title>
+                        <mat-card-subtitle>Configura los horarios de cada día</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <app-business-hours-editor [businessHours]="businessHours"
+                            (hoursChange)="onBusinessHoursChange($event)">
+                        </app-business-hours-editor>
+                    </mat-card-content>
+                </mat-card>
+
+                <!-- Closed Dates (Feriados) -->
+                <mat-card class="settings-card">
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>event_busy</mat-icon>
+                        <mat-card-title>Fechas Cerradas (Feriados)</mat-card-title>
+                        <mat-card-subtitle>Días específicos en los que la veterinaria estará cerrada</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <app-closed-dates-manager [closedDates]="closedDates"
+                            (closedDatesChange)="onClosedDatesChange($event)">
+                        </app-closed-dates-manager>
+                    </mat-card-content>
+                </mat-card>
+
+                <!-- Vacation Periods -->
+                <mat-card class="settings-card">
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>beach_access</mat-icon>
+                        <mat-card-title>Períodos de Vacaciones</mat-card-title>
+                        <mat-card-subtitle>Rangos de fechas en los que la veterinaria estará cerrada por
+                            vacaciones</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <app-vacation-periods-manager [vacationPeriods]="vacationPeriods"
+                            (vacationPeriodsChange)="onVacationPeriodsChange($event)">
+                        </app-vacation-periods-manager>
+                    </mat-card-content>
+                </mat-card>
+
+                <!-- Save Button -->
+                <div class="actions">
+                    <button mat-raised-button color="primary" (click)="saveChanges()"
+                        [disabled]="saving || uploadingLogo">
+                        <mat-spinner *ngIf="saving || uploadingLogo" diameter="20"></mat-spinner>
+                        <mat-icon *ngIf="!saving && !uploadingLogo">save</mat-icon>
+                        {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+                    </button>
+                </div>
+
+            </div> <!-- /.settings-content -->
+
+        </mat-tab> <!-- end Configuración tab -->
+
+        <!-- TAB 2: Loyalty Program -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon>stars</mat-icon>&nbsp;Fidelización
+            </ng-template>
+            <div class="tab-content-pad">
+                <form [formGroup]="loyaltyForm">
+
+                    <!-- Enable toggle -->
+                    <mat-card class="settings-card">
+                        <mat-card-header>
+                            <mat-icon mat-card-avatar>stars</mat-icon>
+                            <mat-card-title>Programa de Puntos</mat-card-title>
+                            <mat-card-subtitle>Premiá a tus clientes frecuentes</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <div class="loyalty-toggle-row">
+                                <div>
+                                    <strong>Activar programa de puntos</strong>
+                                    <p class="loyalty-hint">Cuando está activo, los clientes acumulan puntos
+                                        automáticamente al finalizar cada consulta.</p>
+                                </div>
+                                <mat-slide-toggle formControlName="enabled" color="primary"></mat-slide-toggle>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <!-- Points per action -->
+                    <mat-card class="settings-card">
+                        <mat-card-header>
+                            <mat-icon mat-card-avatar>add_circle</mat-icon>
+                            <mat-card-title>Acumulación de Puntos</mat-card-title>
+                            <mat-card-subtitle>Cuántos puntos se otorgan por cada acción</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <div class="form-row loyalty-row">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Puntos por consulta</mat-label>
+                                    <input matInput type="number" formControlName="pointsPerVisit" min="0">
+                                    <mat-hint>pts por turno finalizado</mat-hint>
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Puntos por peluquería</mat-label>
+                                    <input matInput type="number" formControlName="pointsPerGrooming" min="0">
+                                    <mat-hint>pts por servicio de grooming</mat-hint>
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Puntos por $1 de compra</mat-label>
+                                    <input matInput type="number" formControlName="pointsPerPurchasePeso" min="0">
+                                    <mat-hint>pts por cada $1 en compras</mat-hint>
+                                </mat-form-field>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <!-- Redemption -->
+                    <mat-card class="settings-card">
+                        <mat-card-header>
+                            <mat-icon mat-card-avatar>redeem</mat-icon>
+                            <mat-card-title>Canje</mat-card-title>
+                            <mat-card-subtitle>Cuántos puntos equivalen a $1 de descuento</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <div class="form-row">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>Puntos necesarios para $1</mat-label>
+                                    <input matInput type="number" formControlName="redemptionRate" min="1">
+                                    <mat-hint>Ej: 100 pts = $1 de descuento</mat-hint>
+                                </mat-form-field>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <!-- Tiers -->
+                    <mat-card class="settings-card">
+                        <mat-card-header>
+                            <mat-icon mat-card-avatar>military_tech</mat-icon>
+                            <mat-card-title>Niveles (Tiers)</mat-card-title>
+                            <mat-card-subtitle>Puntos acumulados totales necesarios para alcanzar cada
+                                nivel</mat-card-subtitle>
+                        </mat-card-header>
+                        <mat-card-content>
+                            <div class="form-row loyalty-row">
+                                <mat-form-field appearance="outline">
+                                    <mat-label>🥈 Plata — puntos mínimos</mat-label>
+                                    <input matInput type="number" formControlName="tierSilver" min="1">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>🥇 Oro — puntos mínimos</mat-label>
+                                    <input matInput type="number" formControlName="tierGold" min="1">
+                                </mat-form-field>
+                                <mat-form-field appearance="outline">
+                                    <mat-label>💎 Platino — puntos mínimos</mat-label>
+                                    <input matInput type="number" formControlName="tierPlatinum" min="1">
+                                </mat-form-field>
+                            </div>
+                            <p class="loyalty-hint">🥉 Bronce siempre es el nivel inicial (0 puntos).</p>
+                        </mat-card-content>
+                    </mat-card>
+
+                    <!-- Save button -->
+                    <div class="save-section">
+                        <button mat-raised-button color="primary" (click)="saveChanges()"
+                            [disabled]="saving || loyaltyForm.invalid">
+                            @if (saving) { <mat-spinner diameter="20"></mat-spinner> }
+                            @else { <mat-icon>save</mat-icon> }
+                            Guardar Configuración de Fidelización
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </mat-tab>
+
+        <!-- TAB 3: Subscription -->
+        <mat-tab>
+            <ng-template mat-tab-label>
+                <mat-icon>rocket_launch</mat-icon>&nbsp;Suscripción
+            </ng-template>
+            <div class="tab-content-pad">
+                <app-subscription-overview></app-subscription-overview>
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+</div>

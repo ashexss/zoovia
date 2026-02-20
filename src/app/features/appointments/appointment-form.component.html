@@ -1,0 +1,167 @@
+<div class="form-page">
+
+    <!-- Header -->
+    <div class="form-header">
+        <button mat-icon-button (click)="cancel()" matTooltip="Volver">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div>
+            <h2>Nuevo Turno</h2>
+            <p>Registrá un walk-in o agendá un turno con fecha y hora</p>
+        </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+        <mat-card class="form-card">
+            <mat-card-content>
+
+                <!-- Type Selector (only shown if mode == 'both') -->
+                @if (showTypeSelector) {
+                <div class="type-selector">
+                    <label class="type-option" [class.active]="!isScheduledType">
+                        <input type="radio" formControlName="appointmentType" value="walk_in" hidden>
+                        <div class="type-icon">🚶</div>
+                        <div class="type-text">
+                            <strong>Walk-in</strong>
+                            <span>El cliente ya está en la clínica</span>
+                        </div>
+                    </label>
+                    <label class="type-option" [class.active]="isScheduledType">
+                        <input type="radio" formControlName="appointmentType" value="scheduled" hidden>
+                        <div class="type-icon">📅</div>
+                        <div class="type-text">
+                            <strong>Pre-agendado</strong>
+                            <span>Turno con fecha y hora</span>
+                        </div>
+                    </label>
+                </div>
+                <mat-divider></mat-divider>
+                }
+
+                <!-- Client Search -->
+                <div class="section-title">
+                    <mat-icon>person</mat-icon> Cliente
+                </div>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Buscar cliente por nombre o teléfono</mat-label>
+                    <input matInput formControlName="clientSearch" [matAutocomplete]="clientAuto"
+                        placeholder="Ej: García, Carlos...">
+                    <mat-icon matSuffix>search</mat-icon>
+                    <mat-autocomplete #clientAuto="matAutocomplete" [displayWith]="displayClient.bind(this)"
+                        (optionSelected)="onClientSelected($event.option.value)">
+                        @for (client of filteredClients$ | async; track client.id) {
+                        <mat-option [value]="client">
+                            <strong>{{ client.firstName }} {{ client.lastName }}</strong>
+                            <span class="client-phone"> — {{ client.phone }}</span>
+                        </mat-option>
+                        }
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <!-- Pet selector -->
+                @if (selectedClient) {
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Mascota</mat-label>
+                    <mat-select formControlName="petId" [disabled]="loadingPets">
+                        @if (loadingPets) {
+                        <mat-option disabled>Cargando...</mat-option>
+                        }
+                        @for (pet of clientPets; track pet.id) {
+                        <mat-option [value]="pet.id">
+                            {{ getPetLabel(pet) }}
+                        </mat-option>
+                        }
+                        @if (!loadingPets && clientPets.length === 0) {
+                        <mat-option disabled>Sin mascotas registradas</mat-option>
+                        }
+                    </mat-select>
+                    @if (form.get('petId')?.hasError('required') && form.get('petId')?.touched) {
+                    <mat-error>Seleccioná una mascota</mat-error>
+                    }
+                </mat-form-field>
+                }
+
+                <mat-divider></mat-divider>
+
+                <!-- Date/Time (only for scheduled type) -->
+                @if (isScheduledType) {
+                <div class="section-title">
+                    <mat-icon>calendar_month</mat-icon> Fecha y Hora
+                </div>
+                <div class="two-columns">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Fecha</mat-label>
+                        <input matInput [matDatepicker]="picker" formControlName="appointmentDate" [min]="minDate">
+                        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+                        <mat-datepicker #picker></mat-datepicker>
+                        @if (form.get('appointmentDate')?.hasError('required') && form.get('appointmentDate')?.touched)
+                        {
+                        <mat-error>Seleccioná una fecha</mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline">
+                        <mat-label>Horario</mat-label>
+                        <mat-select formControlName="scheduledTime">
+                            @for (slot of timeSlots; track slot) {
+                            <mat-option [value]="slot">{{ slot }}</mat-option>
+                            }
+                        </mat-select>
+                        @if (form.get('scheduledTime')?.hasError('required') && form.get('scheduledTime')?.touched) {
+                        <mat-error>Seleccioná un horario</mat-error>
+                        }
+                    </mat-form-field>
+                </div>
+                <mat-divider></mat-divider>
+                }
+
+                <!-- Reason -->
+                <div class="section-title">
+                    <mat-icon>healing</mat-icon> Motivo de la consulta
+                </div>
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Motivo</mat-label>
+                    <input matInput formControlName="reason" placeholder="Ej: Vacunación anual, Control de rutina...">
+                    @if (form.get('reason')?.hasError('required') && form.get('reason')?.touched) {
+                    <mat-error>El motivo es obligatorio</mat-error>
+                    }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Notas adicionales (opcional)</mat-label>
+                    <textarea matInput formControlName="notes" rows="2"
+                        placeholder="Alergias, medicamentos actuales, observaciones..."></textarea>
+                </mat-form-field>
+
+                <!-- Priority -->
+                <div class="priority-selector">
+                    <span class="section-title"><mat-icon>flag</mat-icon> Prioridad</span>
+                    <mat-radio-group formControlName="priority" class="radio-group">
+                        <mat-radio-button value="normal">Normal</mat-radio-button>
+                        <mat-radio-button value="urgent" class="urgent-radio">🚨 Urgente</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <button mat-button type="button" (click)="cancel()" [disabled]="saving">
+                Cancelar
+            </button>
+            <button mat-raised-button color="primary" type="submit"
+                [disabled]="form.invalid || !selectedClient || saving">
+                @if (saving) {
+                <mat-spinner diameter="20"></mat-spinner>
+                } @else {
+                <ng-container>
+                    <mat-icon>{{ isScheduledType ? 'event' : 'person_add' }}</mat-icon>
+                    {{ isScheduledType ? 'Agendar turno' : 'Registrar llegada' }}
+                </ng-container>
+                }
+            </button>
+        </div>
+    </form>
+
+</div>

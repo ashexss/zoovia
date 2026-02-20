@@ -1,0 +1,398 @@
+<!-- NAVBAR -->
+<nav class="navbar" [class.scrolled]="scrolled" [class.menu-open]="menuOpen">
+    <div class="nav-inner">
+        <a class="nav-logo" (click)="scrollTo('hero')">
+            <span class="logo-icon">🐾</span>
+            <span class="logo-text">Zoovia</span>
+        </a>
+        <button class="hamburger" (click)="menuOpen = !menuOpen">
+            <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links">
+            <li><a (click)="scrollTo('como-funciona')">Cómo funciona</a></li>
+            <li><a (click)="scrollTo('fidelizacion')">Fidelización</a></li>
+            <li><a (click)="scrollTo('planes')">Planes</a></li>
+            <li><a (click)="scrollTo('contacto')">Contacto</a></li>
+        </ul>
+        <div class="nav-actions">
+            <a routerLink="/login" class="btn-outline">Ingresar</a>
+            <a (click)="scrollTo('contacto')" class="btn-primary">Demo gratuita</a>
+        </div>
+    </div>
+</nav>
+
+<!-- 1. HERO -->
+<section id="hero" class="hero">
+    <div class="hero-shapes" aria-hidden="true">
+        <div class="hs-1"></div>
+        <div class="hs-2"></div>
+        <div class="hs-3"></div>
+    </div>
+    <div class="container hero-layout">
+        <div class="hero-text">
+            <div class="hero-badge reveal">✦ Software para veterinarias</div>
+            <h1 class="reveal"><span class="brand">Zoovia</span><br>Cuidar es conectar.</h1>
+            <p class="hero-sub reveal">Organizá tu veterinaria y generá clientes que vuelven solos.</p>
+            <p class="hero-support reveal">Más orden en tu día a día. Más seguimiento. Más ingresos previsibles.</p>
+            <div class="hero-ctas reveal">
+                <a (click)="scrollTo('contacto')" class="btn-hero-primary">Solicitar demo gratuita</a>
+                <a (click)="scrollTo('como-funciona')" class="btn-hero-secondary">Ver cómo funciona →</a>
+            </div>
+        </div>
+        <div class="hero-mockup reveal">
+            <div class="mockup-window">
+                <div class="mockup-bar">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    <span class="mockup-url">zoovia.app/dashboard</span>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-sidebar">
+                        <div class="ms-logo">🐾 Zoovia</div>
+                        <div class="ms-item active">🏠 Inicio</div>
+                        <div class="ms-item">👥 Clientes</div>
+                        <div class="ms-item">📅 Turnos</div>
+                        <div class="ms-item">⭐ Fidelización</div>
+                    </div>
+                    <div class="mockup-content">
+                        <div class="mc-stats">
+                            <div class="mc-stat">
+                                <div class="mc-n">48</div>
+                                <div class="mc-l">Clientes</div>
+                            </div>
+                            <div class="mc-stat green">
+                                <div class="mc-n">12</div>
+                                <div class="mc-l">Turnos hoy</div>
+                            </div>
+                            <div class="mc-stat gold">
+                                <div class="mc-n">1.2k</div>
+                                <div class="mc-l">Puntos</div>
+                            </div>
+                        </div>
+                        <div class="mc-appt-list">
+                            <div class="mc-appt"><span class="mc-time">09:00</span><span class="mc-pet">Milo ·
+                                    García</span><span class="mc-badge waiting">Esperando</span></div>
+                            <div class="mc-appt"><span class="mc-time">09:30</span><span class="mc-pet">Luna ·
+                                    Martínez</span><span class="mc-badge active">En atención</span></div>
+                            <div class="mc-appt"><span class="mc-time">10:00</span><span class="mc-pet">Rocky ·
+                                    López</span><span class="mc-badge sched">Agendado</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2. PROBLEMA -->
+<section id="problema" class="section section-alt">
+    <div class="container text-center">
+        <div class="section-label reveal">El problema</div>
+        <h2 class="reveal">Cuando la gestión es manual,<br>el cuidado pierde continuidad.</h2>
+        <p class="section-intro reveal">Sabemos cómo funciona muchas veces el día a día en una veterinaria:</p>
+        <p class="reveal" style="color: #5f7280; margin-bottom: 24px; font-size: .95rem;">Y eso se traduce en vacunas
+            olvidadas, seguimientos pendientes y clientes que no vuelven.</p>
+        <div class="problem-grid reveal">
+            <div class="problem-card"><span>📋</span>
+                <p>Fichas en papel o planillas sueltas.</p>
+            </div>
+            <div class="problem-card"><span>🧠</span>
+                <p>Recordatorios que dependen de la memoria.</p>
+            </div>
+            <div class="problem-card"><span>💬</span>
+                <p>Turnos organizados por WhatsApp.</p>
+            </div>
+            <div class="problem-card"><span>🚪</span>
+                <p>Clientes que no vuelven porque nadie les dio un motivo.</p>
+            </div>
+        </div>
+        <div class="problem-close reveal">
+            El desorden no solo complica tu trabajo.<br>
+            <strong>También afecta la experiencia de cada familia que confía en vos.</strong>
+        </div>
+    </div>
+</section>
+
+<!-- 3. FIDELIZACIÓN -->
+<section id="fidelizacion" class="section section-fidel">
+    <div class="container fidel-layout">
+        <div class="fidel-text">
+            <div class="section-label light reveal">Diferencial principal</div>
+            <h2 class="light reveal">Convertí cada consulta<br>en un motivo para que vuelvan.</h2>
+            <p class="fidel-intro reveal">Zoovia integra un programa de fidelización automático. Cada vez que marcás una
+                consulta como atendida, el sistema acredita puntos al cliente — solo.</p>
+            <div class="fidel-nots reveal">
+                <span>Sin planillas.</span><span>Sin cálculos manuales.</span><span>Sin procesos extra.</span>
+            </div>
+            <div class="fidel-benefits reveal">
+                <div class="fb"><span>✓</span> Incentivás la vuelta a consulta.</div>
+                <div class="fb"><span>✓</span> Premiás a quienes confían en vos.</div>
+                <div class="fb"><span>✓</span> Generás un diferencial real frente a otras veterinarias.</div>
+                <div class="fb"><span>✓</span> Fortalecés el vínculo con cada familia.</div>
+            </div>
+            <p class="fidel-impact reveal">Más visitas recurrentes significan <strong>ingresos más previsibles</strong>
+                para tu veterinaria.</p>
+            <p class="fidel-close reveal"><em>Porque cuidar también es acompañar. Y acompañar genera confianza.</em></p>
+        </div>
+        <div class="fidel-card reveal">
+            <div class="lc">
+                <div class="lc-header">
+                    <div class="lc-tier">🥇 Oro</div>
+                    <div class="lc-name">Familia García</div>
+                </div>
+                <div class="lc-points">850 <span>puntos</span></div>
+                <div class="lc-progress">
+                    <div class="lc-progress-labels"><span>Progreso a 💎 Platino</span><span>85%</span></div>
+                    <div class="lc-bar">
+                        <div class="lc-bar-fill" style="width:85%"></div>
+                    </div>
+                </div>
+                <div class="lc-history">
+                    <div class="lc-tx earn"><span class="lc-ico">+</span>
+                        <div>
+                            <div class="lc-desc">Consulta — Milo</div>
+                            <div class="lc-date">Hoy, 09:30</div>
+                        </div><span class="lc-pts">+10 pts</span>
+                    </div>
+                    <div class="lc-tx earn"><span class="lc-ico">+</span>
+                        <div>
+                            <div class="lc-desc">Consulta — Milo</div>
+                            <div class="lc-date">14 Feb</div>
+                        </div><span class="lc-pts">+10 pts</span>
+                    </div>
+                    <div class="lc-tx redeem"><span class="lc-ico red">↩</span>
+                        <div>
+                            <div class="lc-desc">Canje de puntos</div>
+                            <div class="lc-date">10 Feb</div>
+                        </div><span class="lc-pts red">−50 pts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4. ORDEN Y SEGURIDAD -->
+<section id="orden" class="section section-alt">
+    <div class="container text-center">
+        <div class="section-label reveal">Para vos y tus clientes</div>
+        <h2 class="reveal">Orden para vos. Confianza para tus clientes.</h2>
+        <p class="section-intro reveal">Zoovia organiza toda la información de tu veterinaria en un único panel claro y
+            accesible.</p>
+        <div class="features-grid reveal">
+            <div class="feature-card">
+                <div class="fi">📋</div>
+                <h3>Historial Clínico Digital</h3>
+                <p>Accedé al registro completo de cada paciente en segundos.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi">📅</div>
+                <h3>Agenda Clara</h3>
+                <p>Turnos programados y walk-ins en tiempo real, sin complicaciones.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi">☁️</div>
+                <h3>Datos en la nube</h3>
+                <p>Accedé desde cualquier dispositivo, con información segura y respaldada.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi">🐾</div>
+                <h3>Gestión de Pacientes</h3>
+                <p>Perfil completo por mascota: raza, peso, microchip e historial.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi">👥</div>
+                <h3>Perfil de Clientes</h3>
+                <p>Contacto, mascotas, visitas y puntos de fidelización en un solo lugar.</p>
+            </div>
+            <div class="feature-card">
+                <div class="fi">📊</div>
+                <h3>Panel de Control</h3>
+                <p>Estadísticas del día, turnos pendientes y clientes más fidelizados.</p>
+            </div>
+        </div>
+        <p class="section-close reveal">Cuando todo está ordenado, podés dedicarte a lo más importante:
+            <strong>cuidar.</strong></p>
+        <p class="section-close reveal" style="margin-top: 8px; font-size: .9rem;">Tus datos están seguros y respaldados
+            en la nube.</p>
+    </div>
+</section>
+
+<!-- 5. CÓMO FUNCIONA -->
+<section id="como-funciona" class="section">
+    <div class="container text-center">
+        <div class="section-label reveal">Simple desde el primer día</div>
+        <h2 class="reveal">Empezar es simple.</h2>
+        <div class="steps reveal">
+            <div class="step">
+                <div class="step-n">01</div>
+                <h3>Registrás tus clientes y mascotas.</h3>
+                <p>Cargá los datos desde cualquier dispositivo. Sin instalación, sin configuración.</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-n">02</div>
+                <h3>Gestionás turnos y consultas desde un único panel.</h3>
+                <p>Agenda del día, historial clínico y walk-ins — todo en un solo lugar.</p>
+            </div>
+            <div class="step-arrow">→</div>
+            <div class="step">
+                <div class="step-n">03</div>
+                <h3>Zoovia organiza todo y acredita puntos automáticamente.</h3>
+                <p>Al finalizar una consulta, los puntos se suman solos. Sin ninguna acción extra.</p>
+            </div>
+        </div>
+        <div class="how-tags reveal">
+            <span>Sin curva de aprendizaje.</span>
+            <span>Sin instalación.</span>
+            <span>Sin hardware adicional.</span>
+        </div>
+    </div>
+</section>
+
+<!-- 6. ESENCIA -->
+<section class="section section-esencia">
+    <div class="container text-center">
+        <div class="esencia reveal">
+            <p class="esencia-eyebrow">Nuestra misión</p>
+            <h2>Zoovia es el conector del cuidado.</h2>
+            <p class="esencia-text">Impulsamos un cuidado animal continuo y responsable, acompañando a veterinarias y
+                familias con tecnología simple y confiable.</p>
+            <div class="esencia-tagline">
+                <span>No reemplazamos el vínculo.</span>
+                <span class="divider">·</span>
+                <span>Lo fortalecemos.</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 7. TESTIMONIOS -->
+<section id="testimonios" class="section section-alt">
+    <div class="container text-center">
+        <div class="section-label reveal">Lo que dicen</div>
+        <h2 class="reveal">Veterinarias que ya están usando Zoovia.</h2>
+        <div class="testimonials reveal">
+            @for (t of testimonials; track $index) {
+            <div class="t-card">
+                <div class="t-stars">★★★★★</div>
+                <p class="t-text">"{{ t.text }}"</p>
+                <div class="t-author">
+                    <div class="t-avatar">{{ t.author.charAt(0) }}</div>
+                    <div>
+                        <div class="t-name">{{ t.author }}</div>
+                        <div class="t-loc">{{ t.location }}</div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- 8. PLANES -->
+<section id="planes" class="section">
+    <div class="container text-center">
+        <div class="section-label reveal">Sin sorpresas</div>
+        <h2 class="reveal">Planes simples, sin sorpresas.</h2>
+        <p class="section-intro reveal">Pagás solo por los módulos que necesitás.</p>
+        <div class="plans reveal">
+            <div class="plan-card">
+                <div class="plan-icon">🌱</div>
+                <h3>Base</h3>
+                <p>Para arrancar con el pie derecho.</p>
+                <ul>
+                    <li>✓ Clientes y mascotas</li>
+                    <li>✓ Historial clínico</li>
+                    <li>✓ Panel de control</li>
+                </ul>
+                <a (click)="scrollTo('contacto')" class="plan-btn">Consultar</a>
+            </div>
+            <div class="plan-card">
+                <div class="plan-icon">🚀</div>
+                <h3>Con Agenda</h3>
+                <p>Organizá tu día sin esfuerzo.</p>
+                <ul>
+                    <li>✓ Todo del plan Base</li>
+                    <li>✓ Turnos y agenda diaria</li>
+                    <li>✓ Walk-ins y urgencias</li>
+                </ul>
+                <a (click)="scrollTo('contacto')" class="plan-btn">Consultar</a>
+            </div>
+            <div class="plan-card featured">
+                <div class="plan-ribbon">Más elegido</div>
+                <div class="plan-icon">💎</div>
+                <h3>Con Fidelización</h3>
+                <p>Clientes que vuelven solos.</p>
+                <ul>
+                    <li>✓ Todo del plan Con Agenda</li>
+                    <li>✓ Programa de puntos automático</li>
+                    <li>✓ Niveles Bronce → Platino</li>
+                </ul>
+                <a (click)="scrollTo('contacto')" class="plan-btn">Consultar</a>
+            </div>
+        </div>
+        <p class="plans-note reveal">Los precios se coordinan en la demo según tu escala y necesidades.</p>
+    </div>
+</section>
+
+<!-- 9. CTA FINAL + FORMULARIO -->
+<section id="contacto" class="section section-cta">
+    <div class="container cta-layout">
+        <div class="cta-text">
+            <div class="section-label light reveal">Sin compromiso</div>
+            <p class="cta-hook reveal">En 20 minutos podés ver Zoovia funcionando en tu veterinaria.</p>
+            <h2 class="light reveal">Probalo 20 días gratis.</h2>
+            <p class="cta-sub reveal">Coordiná una demo personalizada por Meet o presencial y empezá a usar Zoovia sin
+                compromiso.</p>
+            <div class="cta-checks reveal">
+                <div><span>✓</span> Demo 1:1 personalizada</div>
+                <div><span>✓</span> Sin tarjeta de crédito</div>
+                <div><span>✓</span> Te ayudamos a cargar tus datos</div>
+                <div><span>✓</span> Soporte en español</div>
+            </div>
+        </div>
+        <div class="cta-form-wrap reveal">
+            @if (!submitted) {
+            <form class="cta-form" (ngSubmit)="submitLead()">
+                <h3>Quiero mi demo gratuita</h3>
+                <div class="fg"><label for="nombre">Tu nombre</label><input id="nombre" type="text"
+                        [(ngModel)]="lead.nombre" name="nombre" placeholder="Ana García" required></div>
+                <div class="fg"><label for="vet">Veterinaria</label><input id="vet" type="text"
+                        [(ngModel)]="lead.veterinaria" name="veterinaria" placeholder="Veterinaria del Parque"></div>
+                <div class="fg"><label for="wa">WhatsApp</label><input id="wa" type="tel" [(ngModel)]="lead.whatsapp"
+                        name="whatsapp" placeholder="+54 11 1234-5678" required></div>
+                @if (submitError) { <p class="form-error">{{ submitError }}</p> }
+                <button type="submit" class="form-btn" [disabled]="submitting || !lead.nombre || !lead.whatsapp">
+                    {{ submitting ? 'Enviando...' : 'Quiero mi demo gratuita' }}
+                </button>
+                <p class="form-legal">Nos contactamos para coordinar la demo. Sin spam.</p>
+            </form>
+            }
+            @if (submitted) {
+            <div class="form-success">
+                <div class="success-icon">🎉</div>
+                <h3>¡Listo, {{ lead.nombre }}!</h3>
+                <p>Recibimos tu solicitud. Te contactamos en las próximas horas.</p>
+            </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="container footer-inner">
+        <div class="footer-brand">
+            <span class="footer-logo">🐾 Zoovia</span>
+            <p>La plataforma que conecta el cuidado animal.</p>
+        </div>
+        <div class="footer-links">
+            <a (click)="scrollTo('como-funciona')">Cómo funciona</a>
+            <a (click)="scrollTo('fidelizacion')">Fidelización</a>
+            <a (click)="scrollTo('planes')">Planes</a>
+            <a (click)="scrollTo('contacto')">Contacto</a>
+            <a routerLink="/login">Ingresar</a>
+        </div>
+        <p class="footer-copy">© 2026 Zoovia. Todos los derechos reservados.</p>
+    </div>
+</footer>

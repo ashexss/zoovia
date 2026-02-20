@@ -1,0 +1,73 @@
+<mat-sidenav-container class="sidenav-container">
+    <mat-sidenav #drawer class="sidenav" mode="side" opened>
+        <div class="sidenav-header">
+            <mat-icon class="logo">pets</mat-icon>
+            <h2>Zoovia Admin</h2>
+        </div>
+
+        @if (veterinary$ | async; as vet) {
+        <div class="veterinary-info">
+            <div class="vet-logo">
+                @if (vet.logo) {
+                <img [src]="vet.logo" [alt]="vet.name">
+                } @else {
+                <mat-icon>business</mat-icon>
+                }
+            </div>
+            <div class="vet-name">{{ vet.name }}</div>
+        </div>
+        }
+
+        <mat-nav-list>
+            @if (menuItems$ | async; as items) {
+            @for (item of items; track item.route) {
+            <a mat-list-item [routerLink]="item.route" routerLinkActive="active">
+                <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
+                <span matListItemTitle>{{ item.label }}</span>
+                @if (item.badge) {
+                <span class="badge" matListItemMeta>{{ item.badge }}</span>
+                }
+            </a>
+            }
+            }
+        </mat-nav-list>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+        <mat-toolbar color="primary">
+            @if (veterinary$ | async; as vet) {
+            <div class="toolbar-veterinary">
+                @if (vet.logo) {
+                <img [src]="vet.logo" [alt]="vet.name" class="toolbar-vet-logo">
+                }
+                <span class="toolbar-vet-name">{{ vet.name }}</span>
+            </div>
+            }
+            <span class="spacer"></span>
+
+            @if (currentUser$ | async; as user) {
+            <button mat-button [matMenuTriggerFor]="userMenu">
+                <mat-icon>account_circle</mat-icon>
+                <span class="user-name">{{ user.displayName }}</span>
+                <mat-icon>arrow_drop_down</mat-icon>
+            </button>
+
+            <mat-menu #userMenu="matMenu">
+                <button mat-menu-item disabled>
+                    <mat-icon>badge</mat-icon>
+                    <span>{{ user.role }}</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="logout()">
+                    <mat-icon>logout</mat-icon>
+                    <span>Cerrar Sesión</span>
+                </button>
+            </mat-menu>
+            }
+        </mat-toolbar>
+
+        <div class="content">
+            <router-outlet></router-outlet>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

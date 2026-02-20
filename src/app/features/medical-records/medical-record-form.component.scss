@@ -1,0 +1,152 @@
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 24px;
+
+    h2 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #00695c;
+    }
+}
+
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 0;
+}
+
+.client-form {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-section {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    h3 {
+        margin: 0 0 20px 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #00695c;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #00695c;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        mat-icon {
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
+        }
+    }
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.form-field {
+    flex: 1;
+    min-width: 0;
+
+    &.full-width {
+        width: 100%;
+    }
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    background: #f5f5f5;
+    border-radius: 4px;
+
+    mat-checkbox {
+        display: flex;
+        align-items: center;
+
+        mat-icon {
+            margin-right: 8px;
+            font-size: 1.25rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            color: #00695c;
+        }
+    }
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid #e0e0e0;
+
+    button {
+        min-width: 140px;
+        font-size: 15px;
+    }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .header-container {
+        h2 {
+            font-size: 1.5rem;
+        }
+    }
+
+    .client-form {
+        padding: 0 8px;
+    }
+
+    .form-section {
+        padding: 16px;
+        margin-bottom: 16px;
+
+        h3 {
+            font-size: 1.125rem;
+        }
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-field {
+        width: 100%;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+
+        button {
+            width: 100%;
+            min-width: unset;
+        }
+    }
+}

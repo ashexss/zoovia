@@ -1,0 +1,256 @@
+@if (loading) {
+<div class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando información del cliente...</p>
+</div>
+}
+
+@if (!loading && client) {
+<div class="client-detail">
+
+    <!-- Header -->
+    <div class="detail-header">
+        <button mat-icon-button (click)="goBack()" matTooltip="Volver">
+            <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="client-avatar">{{ getClientInitials() }}</div>
+        <div class="client-title">
+            <h1>{{ client.firstName }} {{ client.lastName }}</h1>
+            <div class="client-meta">
+                <span>{{ client.phone }}</span>
+                <span class="dot">·</span>
+                <span>{{ client.city }}</span>
+                @if (client.loyalty?.tier) {
+                <span class="tier-badge" [class]="tierClass">{{ tierLabel }}</span>
+                }
+            </div>
+        </div>
+        <button mat-raised-button color="primary" (click)="editClient()">
+            <mat-icon>edit</mat-icon> Editar
+        </button>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group animationDuration="200ms">
+
+        <!-- ── Datos del Cliente ───────────────────────────────────────── -->
+        <mat-tab label="Datos del cliente">
+            <div class="tab-content two-col">
+
+                <mat-card>
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>contact_phone</mat-icon>
+                        <mat-card-title>Contacto</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="info-row"><mat-icon>email</mat-icon> {{ client.email }}</div>
+                        <div class="info-row"><mat-icon>phone</mat-icon> {{ client.phone }}</div>
+                        @if (client.whatsapp) {
+                        <div class="info-row"><mat-icon>chat</mat-icon> {{ client.whatsapp }}</div>
+                        }
+                        <div class="info-row"><mat-icon>location_on</mat-icon> {{ client.address }}, {{ client.city }}
+                        </div>
+                        @if (client.identificationNumber) {
+                        <div class="info-row"><mat-icon>badge</mat-icon> DNI {{ client.identificationNumber }}</div>
+                        }
+                    </mat-card-content>
+                </mat-card>
+
+                <mat-card>
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>notifications</mat-icon>
+                        <mat-card-title>Notificaciones</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="info-row">
+                            <mat-icon [class]="client.notificationPreferences?.email ? 'active' : 'inactive'">
+                                {{ client.notificationPreferences?.email ? 'check_circle' : 'cancel' }}
+                            </mat-icon>
+                            Email
+                        </div>
+                        <div class="info-row">
+                            <mat-icon [class]="client.notificationPreferences?.whatsapp ? 'active' : 'inactive'">
+                                {{ client.notificationPreferences?.whatsapp ? 'check_circle' : 'cancel' }}
+                            </mat-icon>
+                            WhatsApp
+                        </div>
+                        <div class="info-row">
+                            <mat-icon [class]="client.notificationPreferences?.sms ? 'active' : 'inactive'">
+                                {{ client.notificationPreferences?.sms ? 'check_circle' : 'cancel' }}
+                            </mat-icon>
+                            SMS
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+
+            </div>
+        </mat-tab>
+
+        <!-- ── Mascotas ────────────────────────────────────────────────── -->
+        <mat-tab [label]="'Mascotas (' + pets.length + ')'">
+            <div class="tab-content">
+                <div class="pets-header">
+                    <h3>Mascotas registradas</h3>
+                    <button mat-raised-button color="primary" (click)="addPet()">
+                        <mat-icon>add</mat-icon> Agregar mascota
+                    </button>
+                </div>
+
+                @if (pets.length === 0) {
+                <div class="empty-state">
+                    <mat-icon>pets</mat-icon>
+                    <p>No hay mascotas registradas</p>
+                    <button mat-stroked-button (click)="addPet()">Agregar primera mascota</button>
+                </div>
+                }
+
+                <div class="pets-grid">
+                    @for (pet of pets; track pet.id) {
+                    <mat-card class="pet-card" (click)="viewPet(pet.id)">
+                        <mat-card-content>
+                            <div class="pet-info">
+                                <div class="pet-icon">
+                                    <mat-icon>{{ getPetIcon(pet.species) }}</mat-icon>
+                                </div>
+                                <div>
+                                    <strong>{{ pet.name }}</strong>
+                                    <p>{{ pet.species | titlecase }} · {{ pet.breed }}</p>
+                                </div>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+                    }
+                </div>
+            </div>
+        </mat-tab>
+
+        <!-- ── Puntos de Fidelización ──────────────────────────────────── -->
+        <mat-tab label="Puntos">
+            <div class="tab-content">
+
+                <!-- Balance card -->
+                <div class="loyalty-header">
+                    <div class="loyalty-balance-card" [class]="tierClass">
+                        <div class="balance-top">
+                            <span class="tier-label">{{ tierLabel }}</span>
+                            <span class="pts-value">{{ loyaltyPoints | number }}</span>
+                        </div>
+                        <div class="balance-sub">puntos disponibles · equivale a {{ pointsAsCurrency }}</div>
+                        @if (nextTierInfo) {
+                        <div class="tier-progress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" [style.width.%]="nextTierProgress"></div>
+                            </div>
+                            <span>{{ nextTierInfo.pointsNeeded }} pts para {{ nextTierInfo.nextTier }}</span>
+                        </div>
+                        } @else {
+                        <div class="tier-progress">Has alcanzado el nivel máximo 🎉</div>
+                        }
+                    </div>
+
+                    <div class="loyalty-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ totalEarned | number }}</span>
+                            <span class="stat-label">Total acumulado</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ totalRedeemed | number }}</span>
+                            <span class="stat-label">Total canjeado</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual adjust (admin) -->
+                <mat-card class="adjust-card">
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>tune</mat-icon>
+                        <mat-card-title>Ajustar puntos manualmente</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="adjust-form">
+                            <mat-form-field appearance="outline">
+                                <mat-label>Tipo</mat-label>
+                                <mat-select [(ngModel)]="adjustType">
+                                    <mat-option value="add">➕ Agregar puntos</mat-option>
+                                    <mat-option value="redeem">🎁 Canjear puntos</mat-option>
+                                </mat-select>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline">
+                                <mat-label>Cantidad de puntos</mat-label>
+                                <input matInput type="number" [(ngModel)]="adjustPoints" min="1">
+                            </mat-form-field>
+
+                            <mat-form-field appearance="outline" class="reason-field">
+                                <mat-label>Descripción (opcional)</mat-label>
+                                <input matInput [(ngModel)]="adjustReason"
+                                    [placeholder]="adjustType === 'add' ? 'Ej: Compra de alimento' : 'Ej: Canje por $50 de descuento'">
+                            </mat-form-field>
+                        </div>
+
+                        <div class="adjust-actions">
+                            @if (adjustType === 'redeem') {
+                            <p class="redeem-preview">
+                                💡 {{ adjustPoints }} puntos = {{ (adjustPoints / 100) | currency:'$' }}
+                                de descuento
+                            </p>
+                            }
+                            <button mat-raised-button [color]="adjustType === 'add' ? 'primary' : 'accent'"
+                                (click)="applyAdjustment()" [disabled]="adjustPoints <= 0 || savingAdjust">
+                                @if (savingAdjust) { <mat-spinner diameter="18"></mat-spinner> }
+                                @else {
+                                {{ adjustType === 'add' ? '➕ Sumar puntos' : '🎁 Registrar canje' }}
+                                }
+                            </button>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+
+                <!-- Transaction history -->
+                <mat-card>
+                    <mat-card-header>
+                        <mat-icon mat-card-avatar>history</mat-icon>
+                        <mat-card-title>Historial</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        @if (loadingHistory) {
+                        <div class="loading-container small"><mat-spinner diameter="30"></mat-spinner></div>
+                        }
+
+                        @if (!loadingHistory && loyaltyHistory.length === 0) {
+                        <div class="empty-state small">
+                            <mat-icon>stars</mat-icon>
+                            <p>Sin movimientos aún. Los puntos se acumulan automáticamente al finalizar cada consulta.
+                            </p>
+                        </div>
+                        }
+
+                        <div class="tx-list">
+                            @for (tx of loyaltyHistory; track tx.id) {
+                            <div class="tx-row" [class.positive]="txIsPositive(tx)"
+                                [class.negative]="!txIsPositive(tx)">
+                                <mat-icon class="tx-icon">{{ getTxIcon(tx.type) }}</mat-icon>
+                                <div class="tx-info">
+                                    <span class="tx-label">{{ getTxLabel(tx.type) }}</span>
+                                    <span class="tx-desc">{{ tx.description }}</span>
+                                    <span class="tx-date">{{ formatDate(tx.createdAt) }}</span>
+                                </div>
+                                <div class="tx-points">
+                                    <span class="pts-change">
+                                        {{ txIsPositive(tx) ? '+' : '' }}{{ tx.points }}
+                                    </span>
+                                    <span class="pts-after">saldo: {{ tx.balanceAfter }}</span>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+
+            </div>
+        </mat-tab>
+
+    </mat-tab-group>
+
+</div>
+}
