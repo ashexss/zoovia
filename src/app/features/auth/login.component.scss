@@ -19,11 +19,11 @@
     gap: 12px;
     margin-bottom: 8px;
 
-    .logo-icon {
-        font-size: 48px;
-        width: 48px;
-        height: 48px;
-        color: #00897b;
+    .logo-img {
+        width: 52px;
+        height: 52px;
+        object-fit: contain;
+        border-radius: 10px;
     }
 
     h1 {
@@ -84,8 +84,7 @@ form {
             font-size: 24px;
         }
 
-        .logo-icon {
-            font-size: 40px;
+        .logo-img {
             width: 40px;
             height: 40px;
         }

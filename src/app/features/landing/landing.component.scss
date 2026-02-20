@@ -176,8 +176,11 @@ h2 {
         align-items: center;
         gap: 8px;
 
-        .logo-icon {
-            font-size: 1.4rem;
+        .logo-img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+            border-radius: 8px;
         }
 
         .logo-text {
@@ -477,6 +480,16 @@ h2 {
                 font-weight: 700;
                 font-size: .8rem;
                 margin-bottom: 12px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+
+                img {
+                    width: 40px;
+                    height: 40px;
+                    object-fit: contain;
+                    border-radius: 3px;
+                }
             }
 
             .ms-item {
@@ -960,6 +973,18 @@ h2 {
     }
 }
 
+.how-support {
+    margin-top: 24px;
+    font-size: .95rem;
+    color: $green;
+    font-weight: 500;
+    background: rgba($green, .08);
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 24px;
+    border: 1px solid rgba($green, .2);
+}
+
 // ─── ESENCIA ──────────────────────────────────────────────────────────────────
 .section-esencia {
     background: $dark;
@@ -1335,6 +1360,16 @@ h2 {
             font-size: 1.1rem;
             font-weight: 800;
             color: $white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            img {
+                width: 90px;
+                height: 90px;
+                object-fit: contain;
+                border-radius: 7px;
+            }
         }
 
         p {
