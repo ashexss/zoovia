@@ -294,46 +294,41 @@
 <!-- 8. PLANES -->
 <section id="planes" class="section">
     <div class="container text-center">
-        <div class="section-label reveal">Sin sorpresas</div>
-        <h2 class="reveal">Planes simples, sin sorpresas.</h2>
-        <p class="section-intro reveal">Pagás solo por los módulos que necesitás.</p>
-        <div class="plans reveal">
-            <div class="plan-card">
-                <div class="plan-icon">🌱</div>
-                <h3>Base</h3>
-                <p>Para arrancar con el pie derecho.</p>
-                <ul>
-                    <li>✓ Clientes y mascotas</li>
-                    <li>✓ Historial clínico</li>
-                    <li>✓ Panel de control</li>
-                </ul>
-                <a (click)="scrollTo('contacto')" class="plan-btn">Consultar</a>
+        <div class="section-label reveal">SIN SORPRESAS</div>
+        <h2 class="reveal">Un solo plan. Todo lo que necesitás.</h2>
+        <p class="section-intro reveal">Sin escalas confusas ni módulos separados. Todo Zoovia, desde el primer día.</p>
+
+        <div class="solo-plan reveal">
+            <div class="solo-plan-header">
+                <img src="icons/logo-zoovia.png" alt="Zoovia" class="solo-plan-logo">
+                <h3 class="solo-plan-name">Plan Zoovia</h3>
             </div>
-            <div class="plan-card">
-                <div class="plan-icon">🚀</div>
-                <h3>Con Agenda</h3>
-                <p>Organizá tu día sin esfuerzo.</p>
-                <ul>
-                    <li>✓ Todo del plan Base</li>
-                    <li>✓ Turnos y agenda diaria</li>
-                    <li>✓ Walk-ins y urgencias</li>
-                </ul>
-                <a (click)="scrollTo('contacto')" class="plan-btn">Consultar</a>
+            <div class="solo-plan-features">
+                <div class="spf-item"><span class="spf-check">✓</span> Clientes, mascotas e historial clínico</div>
+                <div class="spf-item"><span class="spf-check">✓</span> Agenda diaria, turnos y walk-ins</div>
+                <div class="spf-item"><span class="spf-check">✓</span> Programa de fidelización automático</div>
+                <div class="spf-item"><span class="spf-check">✓</span> Panel de control con estadísticas</div>
+                <div class="spf-item"><span class="spf-check">✓</span> Datos en la nube, acceso desde cualquier
+                    dispositivo</div>
+                <div class="spf-item"><span class="spf-check">✓</span> Soporte en español incluido</div>
             </div>
-            <div class="plan-card featured">
-                <div class="plan-ribbon">Más elegido</div>
-                <div class="plan-icon">💎</div>
-                <h3>Con Fidelización</h3>
-                <p>Clientes que vuelven solos.</p>
-                <ul>
-                    <li>✓ Todo del plan Con Agenda</li>
-                    <li>✓ Programa de puntos automático</li>
-                    <li>✓ Niveles Bronce → Platino</li>
-                </ul>
-                <a (click)="scrollTo('contacto')" class="plan-btn">Consultar</a>
+
+            <div class="solo-plan-divider"></div>
+
+            <div class="solo-plan-price">
+                <div class="spp-amount">$59.900</div>
+                <div class="spp-period">/mes · IVA incluido</div>
             </div>
+
+            <div class="spp-trial">Probalo 20 días gratis. Sin tarjeta de crédito.</div>
+
+            <a (click)="scrollTo('contacto')" class="solo-plan-btn">Solicitar demo gratuita</a>
+
+            <p class="solo-plan-note">
+                🐾 <strong>Veterinarias Fundadoras:</strong> consultá por el beneficio exclusivo con precio
+                congelado por 12 meses.
+            </p>
         </div>
-        <p class="plans-note reveal">Los precios se coordinan en la demo según tu escala y necesidades.</p>
     </div>
 </section>
 
