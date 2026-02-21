@@ -20,35 +20,23 @@ service cloud.firestore {
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
     
-    // Clients collection
-    match /clients/{clientId} {
-      allow read: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
-    }
-    
-    // Pets collection
-    match /pets/{petId} {
-      allow read: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
-    }
-    
-    // Medical Records collection
-    match /medicalRecords/{recordId} {
-      allow read: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
-      allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() && belongsToVeterinary(resource.data.veterinaryId);
-    }
-    
-    // Veterinaries collection
+    // Veterinary Context (New multi-tenant structure)
     match /veterinaries/{vetId} {
-      // Users can read their own veterinary data
-      allow read: if isAuthenticated() && belongsToVeterinary(vetId);
-      // Users can update their own veterinary data
-      allow update: if isAuthenticated() && belongsToVeterinary(vetId);
-      // Only allow creation and deletion through admin/backend
+      allow read, update: if belongsToVeterinary(vetId);
       allow create, delete: if false;
+      
+      // All Subcollections under a veterinary (clients, pets, medicalRecords, appointments)
+      match /{document=**} {
+        allow read, write: if belongsToVeterinary(vetId);
+      }
+    }
+    
+    // For Collection Group Queries (required for pets/medicalRecords cross-client queries)
+    match /{path=**}/pets/{petId} {
+      allow read: if belongsToVeterinary(resource.data.veterinaryId);
+    }
+    match /{path=**}/medicalRecords/{recordId} {
+      allow read: if belongsToVeterinary(resource.data.veterinaryId);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
     Firestore,
     collection,
@@ -13,8 +13,8 @@ import {
     orderBy,
     Timestamp
 } from '@angular/fire/firestore';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { switchMap, take, map, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of, throwError, TimeoutError } from 'rxjs';
+import { switchMap, take, map, tap, timeout, catchError } from 'rxjs/operators';
 import { Pet } from '../models';
 import { AuthService } from '../auth/auth.service';
 
@@ -24,6 +24,7 @@ import { AuthService } from '../auth/auth.service';
 export class PetService {
     private firestore = inject(Firestore);
     private authService = inject(AuthService);
+    private injector = inject(Injector);
 
     // Cache
     private petsCache$ = new BehaviorSubject<Pet[] | null>(null);
@@ -55,10 +56,9 @@ export class PetService {
                     return of([]);
                 }
 
-                const petsCol = collection(this.firestore, 'pets');
+                const petsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`);
                 const q = query(
                     petsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId),
                     orderBy('createdAt', 'desc')
                 );
 
@@ -98,15 +98,16 @@ export class PetService {
                     });
                 }
 
-                const petsCol = collection(this.firestore, 'pets');
+                const petsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`);
                 const q = query(
                     petsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId),
                     where('clientId', '==', clientId),
                     orderBy('createdAt', 'desc')
                 );
 
-                return collectionData(q, { idField: 'id' }) as Observable<Pet[]>;
+                return runInInjectionContext(this.injector, () => collectionData(q, { idField: 'id' })).pipe(
+                    map(data => data as Pet[])
+                );
             })
         );
     }
@@ -125,10 +126,9 @@ export class PetService {
                     });
                 }
 
-                const petsCol = collection(this.firestore, 'pets');
+                const petsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`);
                 const q = query(
-                    petsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId)
+                    petsCol
                 );
 
                 return collectionData(q, { idField: 'id' }).pipe(
@@ -152,8 +152,16 @@ export class PetService {
      * Get a single pet by ID
      */
     getPetById(id: string): Observable<Pet | undefined> {
-        const petDoc = doc(this.firestore, 'pets', id);
-        return docData(petDoc, { idField: 'id' }) as Observable<Pet | undefined>;
+        return this.authService.currentUser$.pipe(
+            take(1),
+            switchMap(currentUser => {
+                if (!currentUser?.veterinaryId) {
+                    return of(undefined);
+                }
+                const petDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`, id);
+                return runInInjectionContext(this.injector, () => docData(petDoc, { idField: 'id' })) as Observable<Pet | undefined>;
+            })
+        );
     }
 
     /**
@@ -187,7 +195,7 @@ export class PetService {
             updatedAt: Timestamp.now()
         };
 
-        const petsCol = collection(this.firestore, 'pets');
+        const petsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`);
         const docRef = await addDoc(petsCol, newPet);
 
         // Invalidate cache
@@ -200,7 +208,10 @@ export class PetService {
      * Update an existing pet
      */
     async updatePet(id: string, petData: Partial<Pet>): Promise<void> {
-        const petDoc = doc(this.firestore, 'pets', id);
+        const currentUser = await this.authService.getUserProfile();
+        if (!currentUser?.veterinaryId) throw new Error('User must belong to a veterinary');
+
+        const petDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`, id);
 
         const updateData = {
             ...petData,
@@ -222,7 +233,10 @@ export class PetService {
      * Delete a pet (soft delete - mark as inactive)
      */
     async deletePet(id: string): Promise<void> {
-        const petDoc = doc(this.firestore, 'pets', id);
+        const currentUser = await this.authService.getUserProfile();
+        if (!currentUser?.veterinaryId) throw new Error('User must belong to a veterinary');
+
+        const petDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`, id);
         await updateDoc(petDoc, {
             isActive: false,
             updatedAt: Timestamp.now()

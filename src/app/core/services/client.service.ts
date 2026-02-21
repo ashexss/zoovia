@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
     Firestore,
     collection,
@@ -13,8 +13,8 @@ import {
     orderBy,
     Timestamp
 } from '@angular/fire/firestore';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { switchMap, take, map, filter, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of, throwError, TimeoutError, firstValueFrom } from 'rxjs';
+import { switchMap, take, map, filter, tap, timeout, catchError } from 'rxjs/operators';
 import { Client } from '../models';
 import { AuthService } from '../auth/auth.service';
 
@@ -24,6 +24,7 @@ import { AuthService } from '../auth/auth.service';
 export class ClientService {
     private firestore = inject(Firestore);
     private authService = inject(AuthService);
+    private injector = inject(Injector);
 
     // Cache
     private clientsCache$ = new BehaviorSubject<Client[] | null>(null);
@@ -56,14 +57,21 @@ export class ClientService {
                     return of([]);
                 }
 
-                const clientsCol = collection(this.firestore, 'clients');
+                const clientsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients`);
                 const q = query(
                     clientsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId),
                     orderBy('createdAt', 'desc')
                 );
 
-                return collectionData(q, { idField: 'id' }).pipe(
+                return runInInjectionContext(this.injector, () => collectionData(q, { idField: 'id' })).pipe(
+                    timeout(1000),
+                    catchError((err) => {
+                        if (err instanceof TimeoutError) {
+                            console.warn('[ClientService] Firestore data load timed out, returning empty array.');
+                            return of([]);
+                        }
+                        return throwError(() => err);
+                    }),
                     take(1),
                     map(data => data as Client[]),
                     tap(clients => {
@@ -99,10 +107,9 @@ export class ClientService {
                     });
                 }
 
-                const clientsCol = collection(this.firestore, 'clients');
+                const clientsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients`);
                 const q = query(
-                    clientsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId)
+                    clientsCol
                 );
 
                 return collectionData(q, { idField: 'id' }).pipe(
@@ -127,8 +134,20 @@ export class ClientService {
      * Get a single client by ID
      */
     getClientById(id: string): Observable<Client | undefined> {
-        const clientDocRef = doc(this.firestore, 'clients', id);
-        return docData(clientDocRef, { idField: 'id' }) as Observable<Client | undefined>;
+        return this.authService.currentUser$.pipe(
+            take(1),
+            switchMap(currentUser => {
+                if (!currentUser?.veterinaryId) {
+                    return of(undefined);
+                }
+                const clientDocRef = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients`, id);
+                return (runInInjectionContext(this.injector, () => docData(clientDocRef, { idField: 'id' })) as Observable<Client | undefined>).pipe(
+                    take(1),
+                    timeout(2500),
+                    catchError(() => of(undefined))
+                );
+            })
+        );
     }
 
     /**
@@ -166,7 +185,7 @@ export class ClientService {
             updatedAt: Timestamp.now()
         };
 
-        const clientsCol = collection(this.firestore, 'clients');
+        const clientsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients`);
         const docRef = await addDoc(clientsCol, newClient);
 
         // Invalidate cache
@@ -179,7 +198,12 @@ export class ClientService {
      * Update an existing client
      */
     async updateClient(id: string, clientData: Partial<Client>): Promise<void> {
-        const clientDoc = doc(this.firestore, 'clients', id);
+        const currentUser = await firstValueFrom(this.authService.currentUser$);
+        if (!currentUser?.veterinaryId) {
+            throw new Error('No veterinary assigned');
+        }
+
+        const clientDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients`, id);
 
         const updateData = {
             ...clientData,
@@ -201,7 +225,12 @@ export class ClientService {
      * Delete a client
      */
     async deleteClient(id: string): Promise<void> {
-        const clientDoc = doc(this.firestore, 'clients', id);
+        const currentUser = await firstValueFrom(this.authService.currentUser$);
+        if (!currentUser?.veterinaryId) {
+            throw new Error('No veterinary assigned');
+        }
+
+        const clientDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients`, id);
         await deleteDoc(clientDoc);
 
         // Invalidate cache

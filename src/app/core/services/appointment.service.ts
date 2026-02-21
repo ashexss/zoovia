@@ -1,7 +1,8 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
     Firestore,
     collection,
+    collectionGroup,
     doc,
     getDoc,
     getDocs,
@@ -12,7 +13,8 @@ import {
     orderBy,
     Timestamp
 } from '@angular/fire/firestore';
-import { Observable, from, map } from 'rxjs';
+import { Observable, from, map, of } from 'rxjs';
+import { take, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
 import { VeterinaryService } from './veterinary.service';
 import { LoyaltyService, DEFAULT_LOYALTY_PROGRAM } from './loyalty.service';
@@ -62,6 +64,7 @@ export class AppointmentService {
     private authService = inject(AuthService);
     private vetService = inject(VeterinaryService);
     private loyaltyService = inject(LoyaltyService);
+    private injector = inject(Injector);
 
     private col() {
         return collection(this.firestore, 'appointments');
@@ -71,13 +74,12 @@ export class AppointmentService {
     /** Get all appointments for a vet on a specific date (YYYY-MM-DD) */
     getByDate(veterinaryId: string, date: string): Observable<Appointment[]> {
         const q = query(
-            this.col(),
-            where('veterinaryId', '==', veterinaryId),
+            collection(this.firestore, `veterinaries/${veterinaryId}/appointments`),
             where('date', '==', date),
             orderBy('scheduledTime'),
             orderBy('createdAt')
         );
-        return from(getDocs(q)).pipe(
+        return runInInjectionContext(this.injector, () => from(getDocs(q))).pipe(
             map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)))
         );
     }
@@ -90,17 +92,32 @@ export class AppointmentService {
 
     /** Get a single appointment */
     getById(id: string): Observable<Appointment | undefined> {
-        const ref = doc(this.firestore, 'appointments', id);
-        return from(getDoc(ref)).pipe(
-            map(snap => snap.exists() ? { id: snap.id, ...snap.data() } as Appointment : undefined)
+        return this.authService.currentUser$.pipe(
+            take(1),
+            switchMap(currentUser => {
+                if (!currentUser?.veterinaryId) return of(undefined);
+                const q = query(
+                    collectionGroup(this.firestore, 'appointments'),
+                    where('veterinaryId', '==', currentUser.veterinaryId)
+                );
+                return runInInjectionContext(this.injector, () => from(getDocs(q))).pipe(
+                    map(snap => {
+                        const doc = snap.docs.find(d => d.id === id);
+                        return doc ? { id: doc.id, ...doc.data() } as Appointment : undefined;
+                    })
+                );
+            })
         );
     }
 
     /** Create a new appointment (walk-in or pre-scheduled) */
     async create(data: CreateAppointmentDto): Promise<Appointment> {
+        if (!data.veterinaryId) throw new Error('Veterinary context required');
         const now = Timestamp.now();
         const payload = { ...data, createdAt: now, updatedAt: now };
-        const ref = await addDoc(this.col(), payload);
+
+        const colRef = collection(this.firestore, `veterinaries/${data.veterinaryId}/appointments`);
+        const ref = await addDoc(colRef, payload);
         return { id: ref.id, ...payload };
     }
 
@@ -130,7 +147,10 @@ export class AppointmentService {
     /** Update appointment status, optionally recording the time.
      *  When status → completed, automatically awards loyalty points if program is enabled. */
     async updateStatus(id: string, status: AppointmentStatus): Promise<void> {
-        const ref = doc(this.firestore, 'appointments', id);
+        const currentUser = await this.authService.getUserProfile();
+        if (!currentUser?.veterinaryId) throw new Error('Veterinary context required');
+
+        const ref = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/appointments/${id}`);
         const timeFields: Partial<Appointment> = {};
 
         if (status === 'waiting') {
@@ -159,7 +179,7 @@ export class AppointmentService {
                 if (!program.enabled) return;
 
                 // Get client's current balance
-                const clientRef = doc(this.firestore, 'clients', appt.clientId);
+                const clientRef = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients/${appt.clientId}`);
                 const clientSnap = await getDoc(clientRef);
                 const currentBalance = (clientSnap.data() as any)?.loyaltyPoints ?? 0;
 
@@ -185,7 +205,10 @@ export class AppointmentService {
 
     /** Partial update */
     async update(id: string, data: Partial<Appointment>): Promise<void> {
-        const ref = doc(this.firestore, 'appointments', id);
+        const currentUser = await this.authService.getUserProfile();
+        if (!currentUser?.veterinaryId) throw new Error('Veterinary context required');
+
+        const ref = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/appointments/${id}`);
         await updateDoc(ref, { ...data, updatedAt: Timestamp.now() });
     }
 

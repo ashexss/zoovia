@@ -1,0 +1,259 @@
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 64px 32px;
+
+    p {
+        margin: 0;
+        color: #666;
+    }
+
+    &.small {
+        padding: 32px;
+    }
+}
+
+.pet-detail {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem 2rem;
+}
+
+// ─── Header ────────────────────────────────────────────────────────────────────
+.detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+
+    .pet-avatar-wrapper {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #f0f4f8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        .custom-pet-header-icon {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+
+        .pet-avatar mat-icon {
+            font-size: 36px;
+            width: 36px;
+            height: 36px;
+            color: #5c6bc0;
+        }
+    }
+
+    .pet-title {
+        flex: 1;
+
+        h1 {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .pet-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 4px;
+
+            .dot {
+                opacity: 0.4;
+            }
+        }
+    }
+}
+
+// ─── Tabs Content ──────────────────────────────────────────────────────────────
+.tab-content {
+    padding: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    &.two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+
+        @media (max-width: 720px) {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-size: 14px;
+
+    &:not(:last-child):not(.no-border) {
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    &.no-border {
+        justify-content: flex-start;
+        gap: 10px;
+        padding: 6px 0;
+
+        mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+            color: #6c757d;
+        }
+    }
+
+    .label {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    .value {
+        color: #212529;
+        font-weight: 600;
+        text-align: right;
+    }
+}
+
+.owner-info {
+    .owner-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 12px;
+    }
+
+    .mt-3 {
+        margin-top: 16px;
+        width: 100%;
+    }
+}
+
+// ─── Medical Records ─────────────────────────────────────────────────────────
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h3 {
+        margin: 0;
+        color: #2c3e50;
+    }
+}
+
+.records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.record-card {
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .record-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+
+        .record-date {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: #3f51b5;
+
+            mat-icon {
+                font-size: 18px;
+                width: 18px;
+                height: 18px;
+            }
+        }
+
+        .badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    }
+
+    .record-body {
+        strong {
+            display: block;
+            font-size: 13px;
+            color: #6c757d;
+            margin-bottom: 4px;
+            margin-top: 10px;
+
+            &:first-child {
+                margin-top: 0;
+            }
+        }
+
+        p {
+            margin: 0;
+            font-size: 14px;
+            color: #212529;
+            line-height: 1.4;
+        }
+    }
+}
+
+// ─── Empty State ───────────────────────────────────────────────────────────────
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 3rem;
+    color: #adb5bd;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #e9ecef;
+
+    mat-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #ced4da;
+    }
+
+    h3 {
+        margin: 0;
+        color: #6c757d;
+    }
+
+    p {
+        margin: 0 0 16px 0;
+        color: #adb5bd;
+    }
+}

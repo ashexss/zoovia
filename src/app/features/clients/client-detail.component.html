@@ -108,13 +108,42 @@
                     @for (pet of pets; track pet.id) {
                     <mat-card class="pet-card" (click)="viewPet(pet.id)">
                         <mat-card-content>
-                            <div class="pet-info">
-                                <div class="pet-icon">
+                            <div class="pet-info-header">
+                                <div class="pet-icon-wrapper">
+                                    @if (pet.species === 'dog') {
+                                    <img src="icons/icon-dog.png" alt="Perro" class="custom-pet-icon">
+                                    } @else if (pet.species === 'cat') {
+                                    <img src="icons/icon-cat.png" alt="Gato" class="custom-pet-icon">
+                                    } @else {
                                     <mat-icon>{{ getPetIcon(pet.species) }}</mat-icon>
+                                    }
                                 </div>
-                                <div>
+                                <div class="pet-name-section">
                                     <strong>{{ pet.name }}</strong>
                                     <p>{{ pet.species | titlecase }} · {{ pet.breed }}</p>
+                                </div>
+                            </div>
+
+                            <hr class="pet-card-divider">
+
+                            <div class="pet-medical-summary">
+                                <div class="summary-item">
+                                    <mat-icon inline>calendar_today</mat-icon>
+                                    <span class="label">Última visita:</span>
+                                    <span class="value">{{ pet.lastVisit ? formatDate(pet.lastVisit) : 'No registra'
+                                        }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <mat-icon inline>vaccines</mat-icon>
+                                    <span class="label">Última vacuna:</span>
+                                    <span class="value">{{ pet.lastVaccine ? formatDate(pet.lastVaccine) : 'No registra'
+                                        }}</span>
+                                </div>
+                                <div class="summary-item">
+                                    <mat-icon inline>medication</mat-icon>
+                                    <span class="label">Desparasitación:</span>
+                                    <span class="value">{{ pet.lastDeworming ? formatDate(pet.lastDeworming) : 'No
+                                        registra' }}</span>
                                 </div>
                             </div>
                         </mat-card-content>

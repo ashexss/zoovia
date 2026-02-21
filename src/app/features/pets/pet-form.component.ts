@@ -69,6 +69,13 @@ export class PetFormComponent implements OnInit {
         this.initForm();
         this.loadClients();
         this.checkEditMode();
+
+        // Check if a clientId was passed in query params to auto-select the owner
+        this.route.queryParams.subscribe(params => {
+            if (params['clientId']) {
+                this.petForm.patchValue({ clientId: params['clientId'] });
+            }
+        });
     }
 
     /**
@@ -82,7 +89,7 @@ export class PetFormComponent implements OnInit {
             breed: ['', Validators.required],
             gender: ['male', Validators.required],
             birthDate: [new Date(), Validators.required],
-            weight: [0, [Validators.required, Validators.min(0.1)]],
+            weight: [null, [Validators.required, Validators.min(0.1)]],
             color: [''],
             microchipNumber: [''],
             photo: ['']
@@ -172,7 +179,11 @@ export class PetFormComponent implements OnInit {
                 alert('Mascota registrada exitosamente');
             }
 
-            this.router.navigate(['/dashboard/pets']);
+            if (formValue.clientId) {
+                this.router.navigate(['/dashboard/clients', formValue.clientId]);
+            } else {
+                this.router.navigate(['/dashboard/pets']);
+            }
         } catch (error) {
             console.error('Error saving pet:', error);
             alert('Error al guardar la mascota');
@@ -185,7 +196,12 @@ export class PetFormComponent implements OnInit {
      * Cancel and go back
      */
     onCancel(): void {
-        this.router.navigate(['/dashboard/pets']);
+        const clientId = this.petForm.get('clientId')?.value || this.route.snapshot.queryParams['clientId'];
+        if (clientId) {
+            this.router.navigate(['/dashboard/clients', clientId]);
+        } else {
+            this.router.navigate(['/dashboard/pets']);
+        }
     }
 
     /**

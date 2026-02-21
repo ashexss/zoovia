@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
     Firestore,
     doc,
@@ -27,6 +27,7 @@ export class VeterinaryService {
     private firestore = inject(Firestore);
     private storage = inject(Storage);
     private authService = inject(AuthService);
+    private injector = inject(Injector);
 
     // Cache
     private veterinaryCache$ = new BehaviorSubject<Veterinary | null>(null);
@@ -54,7 +55,8 @@ export class VeterinaryService {
         const vetDoc = doc(this.firestore, 'veterinaries', id);
 
         // Use getDoc instead of docData to handle missing documents properly
-        return from(getDoc(vetDoc)).pipe(
+        const getDocPromise = runInInjectionContext(this.injector, () => getDoc(vetDoc));
+        return from(getDocPromise).pipe(
             take(1),
             map((snapshot: DocumentSnapshot) => {
                 if (snapshot.exists()) {

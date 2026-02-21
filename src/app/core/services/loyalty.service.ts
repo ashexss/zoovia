@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
     Firestore,
     collection,
@@ -42,6 +42,7 @@ export const DEFAULT_LOYALTY_PROGRAM: LoyaltyProgram = {
 @Injectable({ providedIn: 'root' })
 export class LoyaltyService {
     private firestore = inject(Firestore);
+    private injector = inject(Injector);
 
     private txCol() {
         return collection(this.firestore, 'loyalty_transactions');
@@ -58,7 +59,7 @@ export class LoyaltyService {
             orderBy('createdAt', 'desc'),
             limit(count)
         );
-        return from(getDocs(q)).pipe(
+        return from(runInInjectionContext(this.injector, () => getDocs(q))).pipe(
             map(snap => snap.docs.map(d => ({ id: d.id, ...d.data() } as LoyaltyTransaction)))
         );
     }

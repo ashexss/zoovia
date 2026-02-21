@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -36,6 +36,7 @@ export class ClientFormComponent implements OnInit {
     private router = inject(Router);
     private route = inject(ActivatedRoute);
     private clientService = inject(ClientService);
+    private cdr = inject(ChangeDetectorRef);
 
     clientForm!: FormGroup;
     isEditMode = false;
@@ -60,7 +61,7 @@ export class ClientFormComponent implements OnInit {
             whatsapp: ['', [Validators.pattern(/^[0-9+\-\s()]+$/)]],
             address: [''],
             city: [''],
-            identificationNumber: [''],
+            identificationNumber: ['', [Validators.required]],
             branchId: [''], // This should be populated from a branch selector in production
             notificationPreferences: this.fb.group({
                 email: [true],
@@ -92,10 +93,12 @@ export class ClientFormComponent implements OnInit {
                     this.clientForm.patchValue(client);
                 }
                 this.loading = false;
+                this.cdr.detectChanges();
             },
             error: (error) => {
                 console.error('Error loading client:', error);
                 this.loading = false;
+                this.cdr.detectChanges();
                 alert('Error al cargar el cliente');
                 this.router.navigate(['/dashboard/clients']);
             }
@@ -160,6 +163,9 @@ export class ClientFormComponent implements OnInit {
         }
         if (field.hasError('pattern')) {
             return 'Formato inválido';
+        }
+        if (fieldName === 'identificationNumber' && field.hasError('required')) {
+            return 'El DNI es requerido';
         }
         return '';
     }

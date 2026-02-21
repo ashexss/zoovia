@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -44,6 +44,7 @@ export class ClientDetailComponent implements OnInit {
     private vetService = inject(VeterinaryService);
     private authService = inject(AuthService);
     private snackBar = inject(MatSnackBar);
+    private cdr = inject(ChangeDetectorRef);
 
     client: Client | null = null;
     pets: Pet[] = [];
@@ -81,18 +82,26 @@ export class ClientDetailComponent implements OnInit {
             next: (client) => {
                 this.client = client || null;
                 this.loading = false;
+                this.cdr.detectChanges();
                 if (client) this.loadLoyaltyHistory(id);
             },
             error: (error) => {
-                console.error('Error loading client:', error);
+                console.error('[ClientDetail] Error loading client:', error);
                 this.loading = false;
+                this.cdr.detectChanges();
                 this.router.navigate(['/dashboard/clients']);
             }
         });
 
         this.petService.getPetsByClient(id).subscribe({
-            next: (pets) => { this.pets = pets; },
-            error: (error) => { console.error('Error loading pets:', error); }
+            next: (pets) => {
+                this.pets = pets;
+                this.cdr.detectChanges();
+            },
+            error: (error) => {
+                console.error('Error loading pets:', error);
+                this.cdr.detectChanges();
+            }
         });
     }
 
@@ -103,8 +112,12 @@ export class ClientDetailComponent implements OnInit {
             next: (txs) => {
                 this.loyaltyHistory = txs;
                 this.loadingHistory = false;
+                this.cdr.detectChanges();
             },
-            error: () => { this.loadingHistory = false; }
+            error: () => {
+                this.loadingHistory = false;
+                this.cdr.detectChanges();
+            }
         });
     }
 
@@ -155,14 +168,26 @@ export class ClientDetailComponent implements OnInit {
     get loyaltyTier(): LoyaltyTier { return this.client?.loyalty?.tier ?? 'bronze'; }
     get totalEarned(): number { return this.client?.loyalty?.totalEarned ?? 0; }
     get totalRedeemed(): number { return this.client?.loyalty?.totalRedeemed ?? 0; }
+
+    // Cache nextTierInfo to prevent NG0100 (returning new object ref every CD cycle)
+    private _lastTotalEarned = -1;
+    private _cachedNextTierInfo: any = null;
+
     get nextTierInfo() {
-        return this.loyaltyService.getNextTierInfo(this.totalEarned, DEFAULT_LOYALTY_PROGRAM.tiers);
+        const currentEarned = this.totalEarned;
+        if (currentEarned !== this._lastTotalEarned || !this._cachedNextTierInfo) {
+            this._lastTotalEarned = currentEarned;
+            this._cachedNextTierInfo = this.loyaltyService.getNextTierInfo(currentEarned, DEFAULT_LOYALTY_PROGRAM.tiers);
+        }
+        return this._cachedNextTierInfo;
     }
+
     get tierLabel(): string { return this.loyaltyService.getTierLabel(this.loyaltyTier); }
     get tierClass(): string { return this.loyaltyService.getTierCssClass(this.loyaltyTier); }
     get pointsAsCurrency(): string {
         return this.loyaltyService.pointsToCurrency(this.loyaltyPoints, DEFAULT_LOYALTY_PROGRAM.redemptionRate);
     }
+
     get nextTierProgress(): number {
         const info = this.nextTierInfo;
         if (!info) return 100;
@@ -171,8 +196,9 @@ export class ClientDetailComponent implements OnInit {
         const thresholds = [tiers.bronze, tiers.silver, tiers.gold, tiers.platinum];
         const tierIdx = thresholds.findIndex(t => current < t) - 1;
         const start = thresholds[Math.max(0, tierIdx)] ?? 0;
-        const end = (start + info.pointsNeeded);
-        return Math.min(100, Math.round(((current - start) / (end - start)) * 100));
+        const MathEnd = (start + info.pointsNeeded);
+        if (MathEnd === start) return 100;
+        return Math.min(100, Math.round(((current - start) / (MathEnd - start)) * 100));
     }
 
     getTxIcon(type: LoyaltyTransaction['type']): string {

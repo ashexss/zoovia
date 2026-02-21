@@ -26,7 +26,6 @@ export class NavigationService {
                 // Always present items
                 items.push({ icon: 'dashboard', label: 'Inicio', route: '/dashboard' });
                 items.push({ icon: 'people', label: 'Clientes', route: '/dashboard/clients' });
-                items.push({ icon: 'pets', label: 'Mascotas', route: '/dashboard/pets' });
 
                 if (!vet || !vet.subscription) {
                     // Fallback or basic items if no subscription data

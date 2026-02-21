@@ -5,10 +5,6 @@
             "queryScope": "COLLECTION",
             "fields": [
                 {
-                    "fieldPath": "veterinaryId",
-                    "order": "ASCENDING"
-                },
-                {
                     "fieldPath": "date",
                     "order": "ASCENDING"
                 },
@@ -26,10 +22,6 @@
             "collectionGroup": "appointments",
             "queryScope": "COLLECTION",
             "fields": [
-                {
-                    "fieldPath": "veterinaryId",
-                    "order": "ASCENDING"
-                },
                 {
                     "fieldPath": "date",
                     "order": "ASCENDING"
@@ -52,6 +44,66 @@
                     "fieldPath": "veterinaryId",
                     "order": "ASCENDING"
                 },
+                {
+                    "fieldPath": "clientId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "medicalRecords",
+            "queryScope": "COLLECTION_GROUP",
+            "fields": [
+                {
+                    "fieldPath": "veterinaryId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "pets",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "veterinaryId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "clientId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "pets",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "veterinaryId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "pets",
+            "queryScope": "COLLECTION",
+            "fields": [
                 {
                     "fieldPath": "clientId",
                     "order": "ASCENDING"

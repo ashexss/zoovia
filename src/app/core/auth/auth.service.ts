@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
     Auth,
     signInWithEmailAndPassword,
@@ -25,6 +25,7 @@ import { User } from '../models';
 export class AuthService {
     private auth = inject(Auth);
     private firestore = inject(Firestore);
+    private injector = inject(Injector);
 
     // Observable of the current Firebase user
     user$ = user(this.auth);
@@ -37,7 +38,7 @@ export class AuthService {
             }
             // Use docData instead of async getDoc to stay in injection context
             const userDocRef = doc(this.firestore, 'users', firebaseUser.uid);
-            return docData(userDocRef, { idField: 'id' }).pipe(
+            return runInInjectionContext(this.injector, () => docData(userDocRef, { idField: 'id' })).pipe(
                 map(data => data as User | undefined),
                 map(user => user || null)
             );
@@ -111,7 +112,7 @@ export class AuthService {
             const userId = uid || this.auth.currentUser?.uid;
             if (!userId) return null;
 
-            const userDoc = await getDoc(doc(this.firestore, 'users', userId));
+            const userDoc = await runInInjectionContext(this.injector, () => getDoc(doc(this.firestore, 'users', userId)));
             if (userDoc.exists()) {
                 return userDoc.data() as User;
             }

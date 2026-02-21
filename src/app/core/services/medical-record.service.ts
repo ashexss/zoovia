@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, Injector, runInInjectionContext } from '@angular/core';
 import {
     Firestore,
     collection,
@@ -13,8 +13,8 @@ import {
     orderBy,
     Timestamp
 } from '@angular/fire/firestore';
-import { Observable, of, BehaviorSubject } from 'rxjs';
-import { switchMap, take, map, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject, throwError, TimeoutError } from 'rxjs';
+import { switchMap, take, map, tap, timeout, catchError } from 'rxjs/operators';
 import { MedicalRecord, Prescription } from '../models';
 import { AuthService } from '../auth/auth.service';
 
@@ -24,6 +24,7 @@ import { AuthService } from '../auth/auth.service';
 export class MedicalRecordService {
     private firestore = inject(Firestore);
     private authService = inject(AuthService);
+    private injector = inject(Injector);
 
     // Cache
     private recordsCache$ = new BehaviorSubject<MedicalRecord[] | null>(null);
@@ -62,7 +63,15 @@ export class MedicalRecordService {
                     orderBy('date', 'desc')
                 );
 
-                return collectionData(q, { idField: 'id' }).pipe(
+                return runInInjectionContext(this.injector, () => collectionData(q, { idField: 'id' })).pipe(
+                    timeout(1000),
+                    catchError((err) => {
+                        if (err instanceof TimeoutError) {
+                            console.warn('[MedicalRecordService] Firestore collectionData timed out for all records.');
+                            return of([]);
+                        }
+                        return throwError(() => err);
+                    }),
                     take(1),
                     map(data => data as MedicalRecord[]),
                     tap(records => {

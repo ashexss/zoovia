@@ -209,6 +209,9 @@ export interface Pet {
     microchipNumber?: string;
     photo?: string;
     isActive: boolean;
+    lastVisit?: Timestamp;
+    lastVaccine?: Timestamp;
+    lastDeworming?: Timestamp;
     createdAt: Timestamp;
     updatedAt: Timestamp;
 }

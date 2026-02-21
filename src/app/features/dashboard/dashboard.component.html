@@ -1,7 +1,7 @@
 <mat-sidenav-container class="sidenav-container">
     <mat-sidenav #drawer class="sidenav" mode="side" opened>
         <div class="sidenav-header">
-            <img src="icons/logo-zoovia.png" alt="Zoovia" class="logo">
+            <img src="/icons/logo-zoovia.png" alt="Zoovia" class="logo">
             <h2>Zoovia Admin</h2>
         </div>
 
@@ -44,6 +44,12 @@
             </div>
             }
             <span class="spacer"></span>
+
+            @if (veterinary$ | async; as vet) {
+            <div class="toolbar-plan-badge" [class.active]="vet.subscription?.status === 'active'">
+                {{ vet.subscription?.plan || 'FREE' | uppercase }}
+            </div>
+            }
 
             @if (currentUser$ | async; as user) {
             <button mat-button [matMenuTriggerFor]="userMenu">

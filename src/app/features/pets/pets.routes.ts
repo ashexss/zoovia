@@ -10,6 +10,10 @@ export const PETS_ROUTES: Routes = [
         loadComponent: () => import('./pet-form.component').then(m => m.PetFormComponent)
     },
     {
+        path: ':id',
+        loadComponent: () => import('./pet-detail.component').then(m => m.PetDetailComponent)
+    },
+    {
         path: ':id/edit',
         loadComponent: () => import('./pet-form.component').then(m => m.PetFormComponent)
     }

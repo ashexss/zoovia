@@ -38,6 +38,17 @@
     width: 100%;
     background: white;
 
+    th.mat-header-cell,
+    td.mat-cell {
+        padding: 18px 24px; // Breathable spacing
+        font-size: 0.95rem;
+    }
+
+    tr.mat-row,
+    tr.mat-header-row {
+        height: auto; // Let padding dictate height
+    }
+
     .email-link,
     .phone-link {
         color: var(--primary-color);

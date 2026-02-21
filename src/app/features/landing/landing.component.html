@@ -2,7 +2,7 @@
 <nav class="navbar" [class.scrolled]="scrolled" [class.menu-open]="menuOpen">
     <div class="nav-inner">
         <a class="nav-logo" (click)="scrollTo('hero')">
-            <img src="icons/logo-zoovia.png" alt="Zoovia" class="logo-img">
+            <img src="/icons/logo-zoovia.png" alt="Zoovia" class="logo-img">
             <span class="logo-text">Zoovia</span>
         </a>
         <button class="hamburger" (click)="menuOpen = !menuOpen">
@@ -15,7 +15,7 @@
             <li><a (click)="scrollTo('contacto')">Contacto</a></li>
         </ul>
         <div class="nav-actions">
-            <a routerLink="/login" class="btn-outline">Ingresar</a>
+            <a routerLink="/login" class="btn-outline">Ya soy VetZoovia</a>
             <a (click)="scrollTo('contacto')" class="btn-primary">Demo gratuita</a>
         </div>
     </div>
@@ -47,7 +47,7 @@
                 </div>
                 <div class="mockup-body">
                     <div class="mockup-sidebar">
-                        <div class="ms-logo"><img src="icons/logo-zoovia.png" alt="Zoovia"> Zoovia</div>
+                        <div class="ms-logo"><img src="/icons/logo-zoovia.png" alt="Zoovia"> Zoovia</div>
                         <div class="ms-item active">🏠 Inicio</div>
                         <div class="ms-item">👥 Clientes</div>
                         <div class="ms-item">📅 Turnos</div>

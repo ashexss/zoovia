@@ -9,7 +9,7 @@
         <!-- TAB 1: General Configuration -->
         <mat-tab>
             <ng-template mat-tab-label>
-                <mat-icon>settings</mat-icon>&nbsp;Configuración
+                <mat-icon>settings</mat-icon>&nbsp;Perfil
             </ng-template>
 
             <div *ngIf="loading" class="loading-container">
@@ -160,12 +160,32 @@
                     </mat-card-content>
                 </mat-card>
 
+                <!-- Save Button -->
+                <div class="actions">
+                    <button mat-raised-button color="primary" (click)="saveChanges()"
+                        [disabled]="saving || uploadingLogo">
+                        <mat-spinner *ngIf="saving || uploadingLogo" diameter="20"></mat-spinner>
+                        <mat-icon *ngIf="!saving && !uploadingLogo">save</mat-icon>
+                        {{ saving ? 'Guardando...' : 'Guardar Perfil' }}
+                    </button>
+                </div>
+
+            </div> <!-- /.settings-content -->
+        </mat-tab> <!-- end Perfil tab -->
+
+        <!-- TAB 2: Rutina y Horarios -->
+        <mat-tab *ngIf="veterinary">
+            <ng-template mat-tab-label>
+                <mat-icon>calendar_month</mat-icon>&nbsp;Agenda
+            </ng-template>
+
+            <div class="settings-content">
                 <!-- Business Hours -->
                 <mat-card class="settings-card">
                     <mat-card-header>
                         <mat-icon mat-card-avatar>schedule</mat-icon>
                         <mat-card-title>Horarios de Atención</mat-card-title>
-                        <mat-card-subtitle>Configura los horarios de cada día</mat-card-subtitle>
+                        <mat-card-subtitle>Configura los horarios de la clínica</mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
                         <app-business-hours-editor [businessHours]="businessHours"
@@ -179,7 +199,7 @@
                     <mat-card-header>
                         <mat-icon mat-card-avatar>event_busy</mat-icon>
                         <mat-card-title>Fechas Cerradas (Feriados)</mat-card-title>
-                        <mat-card-subtitle>Días específicos en los que la veterinaria estará cerrada</mat-card-subtitle>
+                        <mat-card-subtitle>Días específicos sin atención regular</mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
                         <app-closed-dates-manager [closedDates]="closedDates"
@@ -192,9 +212,8 @@
                 <mat-card class="settings-card">
                     <mat-card-header>
                         <mat-icon mat-card-avatar>beach_access</mat-icon>
-                        <mat-card-title>Períodos de Vacaciones</mat-card-title>
-                        <mat-card-subtitle>Rangos de fechas en los que la veterinaria estará cerrada por
-                            vacaciones</mat-card-subtitle>
+                        <mat-card-title>Vacaciones</mat-card-title>
+                        <mat-card-subtitle>Rangos de fechas en los que la clínica estará cerrada</mat-card-subtitle>
                     </mat-card-header>
                     <mat-card-content>
                         <app-vacation-periods-manager [vacationPeriods]="vacationPeriods"
@@ -205,17 +224,14 @@
 
                 <!-- Save Button -->
                 <div class="actions">
-                    <button mat-raised-button color="primary" (click)="saveChanges()"
-                        [disabled]="saving || uploadingLogo">
-                        <mat-spinner *ngIf="saving || uploadingLogo" diameter="20"></mat-spinner>
-                        <mat-icon *ngIf="!saving && !uploadingLogo">save</mat-icon>
-                        {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+                    <button mat-raised-button color="primary" (click)="saveChanges()" [disabled]="saving">
+                        <mat-spinner *ngIf="saving" diameter="20"></mat-spinner>
+                        <mat-icon *ngIf="!saving">save</mat-icon>
+                        {{ saving ? 'Guardando...' : 'Guardar Agenda' }}
                     </button>
                 </div>
-
-            </div> <!-- /.settings-content -->
-
-        </mat-tab> <!-- end Configuración tab -->
+            </div>
+        </mat-tab>
 
         <!-- TAB 2: Loyalty Program -->
         <mat-tab>
