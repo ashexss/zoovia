@@ -1,7 +1,7 @@
 import { Timestamp } from '@angular/fire/firestore';
 
 // User roles
-export type UserRole = 'admin' | 'veterinarian' | 'assistant' | 'client' | 'groomer';
+export type UserRole = 'superadmin' | 'admin' | 'veterinarian' | 'assistant' | 'client' | 'groomer';
 
 // User interface
 export interface User {
@@ -80,7 +80,7 @@ export interface Veterinary {
 
     // Subscription
     businessType: BusinessType;
-    subscription: Subscription;
+    subscription?: Subscription;
 
     // Appointment configuration
     appointmentSettings?: {

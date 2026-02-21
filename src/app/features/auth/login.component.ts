@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -30,6 +30,7 @@ export class LoginComponent {
     private fb = inject(FormBuilder);
     private authService = inject(AuthService);
     private router = inject(Router);
+    private cdr = inject(ChangeDetectorRef);
 
     loginForm: FormGroup;
     loading = false;
@@ -56,25 +57,33 @@ export class LoginComponent {
             await this.authService.signIn(email, password);
             this.router.navigate(['/dashboard']);
         } catch (error: any) {
-            this.errorMessage = this.getErrorMessage(error);
-        } finally {
             this.loading = false;
+            this.errorMessage = this.getErrorMessage(error);
+            this.cdr.detectChanges();
+        } finally {
+            if (this.loading) {
+                this.loading = false;
+                this.cdr.detectChanges();
+            }
         }
     }
 
     private getErrorMessage(error: any): string {
         switch (error.code) {
+            case 'auth/invalid-credential':   // Firebase v9+ unifica wrong-password y user-not-found
             case 'auth/user-not-found':
             case 'auth/wrong-password':
                 return 'Email o contraseña incorrectos';
             case 'auth/invalid-email':
-                return 'Email inválido';
+                return 'El email ingresado no es válido';
             case 'auth/user-disabled':
-                return 'Usuario deshabilitado';
+                return 'Esta cuenta está deshabilitada. Contactá a soporte';
             case 'auth/too-many-requests':
-                return 'Demasiados intentos fallidos. Intente más tarde';
+                return 'Demasiados intentos fallidos. Esperá unos minutos e intentá de nuevo';
+            case 'auth/network-request-failed':
+                return 'Sin conexión a internet. Verificá tu red';
             default:
-                return 'Error al iniciar sesión. Intente nuevamente';
+                return 'Error al iniciar sesión. Intentá de nuevo';
         }
     }
 }

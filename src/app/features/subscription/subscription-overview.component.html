@@ -5,83 +5,130 @@
         <mat-spinner diameter="40"></mat-spinner>
     </div>
     } @else {
-    <!-- Status Banner -->
-    <div class="status-banner" [class.trial]="subscription.status === 'trial'">
-        <mat-icon>{{ subscription.status === 'active' ? 'verified' : 'timer' }}</mat-icon>
+
+    <!-- Banner de estado -->
+    <div class="status-banner" [class.trial]="subscription.status === 'trial'"
+        [class.suspended]="subscription.status === 'suspended'">
+        <mat-icon>{{ subscription.status === 'active' ? 'verified' : subscription.status === 'trial' ? 'timer' :
+            'warning' }}</mat-icon>
         <span>{{ statusLabel }}</span>
     </div>
 
-    <!-- Plan Summary Card -->
-    <mat-card class="plan-card">
-        <mat-card-header>
-            <mat-icon mat-card-avatar>business</mat-icon>
-            <mat-card-title>{{ veterinary.name }}</mat-card-title>
-            <mat-card-subtitle>{{ getBusinessTypeLabel() }}</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-            <div class="plan-details">
-                <div class="plan-info">
-                    <span class="label">Plan actual</span>
-                    <strong>{{ subscription.plan | titlecase }}</strong>
-                </div>
-                <div class="plan-info">
-                    <span class="label">Facturación</span>
-                    <strong>{{ subscription.billingCycle === 'monthly' ? 'Mensual' : 'Anual' }}</strong>
-                </div>
-                <div class="plan-info price">
-                    <span class="label">Total mensual</span>
-                    <strong class="price-value">${{ currentMonthlyPrice }} USD</strong>
+    <!-- Plan Card Principal -->
+    <div class="plan-hero-card">
+        <div class="plan-hero-header">
+            <img src="icons/logo-zoovia.png" alt="Zoovia" class="plan-logo">
+            <div class="plan-hero-info">
+                <span class="plan-label">Tu plan actual</span>
+                <h2 class="plan-name">{{ planDisplayName }}</h2>
+                <span class="plan-price">${{ subscription.monthlyPrice | number:'1.0-0' }} <small>ARS /
+                        mes</small></span>
+            </div>
+        </div>
+
+        <div class="plan-hero-footer">
+            <div class="billing-info-item">
+                <mat-icon>event_repeat</mat-icon>
+                <div>
+                    <span class="bi-label">Facturación</span>
+                    <span class="bi-value">{{ subscription.billingCycle === 'monthly' ? 'Mensual' : 'Anual' }}</span>
                 </div>
             </div>
-        </mat-card-content>
-    </mat-card>
+            <div class="billing-info-item">
+                <mat-icon>calendar_today</mat-icon>
+                <div>
+                    <span class="bi-label">Próximo vencimiento</span>
+                    <span class="bi-value">{{ nextBillingFormatted }}</span>
+                </div>
+            </div>
+            <div class="billing-info-item">
+                <mat-icon>payments</mat-icon>
+                <div>
+                    <span class="bi-label">Método de pago</span>
+                    <span class="bi-value">{{ paymentMethodLabel }}</span>
+                </div>
+            </div>
+        </div>
 
-    <!-- Modules Marketplace -->
+        <div class="plan-change-notice">
+            <mat-icon>info_outline</mat-icon>
+            <span>Para cambiar de plan o agregar módulos, <a href="mailto:hola@zoovia.app">contactá a Zoovia</a>.</span>
+        </div>
+    </div>
+
+    <!-- Módulos incluidos en el plan -->
     <h3 class="section-title">
-        <mat-icon>extension</mat-icon>
-        Módulos disponibles
+        <mat-icon>check_circle</mat-icon>
+        Incluido en tu plan
     </h3>
-
-    <div class="modules-grid">
-        @for (mod of availableModules(); track mod.key) {
-        <mat-card class="module-card" [class.active]="isModuleActive(mod.key)">
-            <div class="module-header">
-                <div class="module-icon" [class.active]="isModuleActive(mod.key)">
-                    <mat-icon>{{ mod.icon }}</mat-icon>
-                </div>
-                <div class="module-title">
-                    <h4>{{ mod.name }}</h4>
-                    <span class="module-price">+${{ mod.price }}/mes</span>
-                </div>
-                <mat-slide-toggle [checked]="isModuleActive(mod.key)" (change)="toggleModule(mod)" [disabled]="saving"
-                    color="primary">
-                </mat-slide-toggle>
-            </div>
-            <p class="module-description">{{ mod.description }}</p>
-            <div class="module-status">
-                <mat-icon>{{ isModuleActive(mod.key) ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon>
-                {{ isModuleActive(mod.key) ? 'Activo' : 'No activado' }}
-            </div>
-        </mat-card>
+    <div class="included-modules">
+        @for (mod of includedModules; track mod.key) {
+        <div class="module-chip included">
+            <mat-icon>{{ mod.icon }}</mat-icon>
+            <span>{{ mod.name }}</span>
+        </div>
         }
     </div>
 
-    <!-- Core Modules (informational, always included) -->
-    <h3 class="section-title">
-        <mat-icon>lock_open</mat-icon>
-        Módulos incluidos en tu plan
+    <!-- Módulos Add-on -->
+    @if (addonModules.length > 0) {
+    <h3 class="section-title addon-title">
+        <mat-icon>add_circle_outline</mat-icon>
+        Módulos adicionales
     </h3>
-    <div class="core-modules">
-        @if (subscription.modules.clients) {
-        <div class="core-chip"><mat-icon>people</mat-icon> Clientes</div>
+    <div class="addon-grid">
+        @for (mod of addonModules; track mod.key) {
+        <div class="addon-card" [class.active]="isModuleActive(mod.key)">
+            <div class="addon-header">
+                <div class="addon-icon" [class.active]="isModuleActive(mod.key)">
+                    <mat-icon>{{ mod.icon }}</mat-icon>
+                </div>
+                <div class="addon-meta">
+                    <h4>{{ mod.name }}</h4>
+                    <span class="addon-status">
+                        @if (isModuleActive(mod.key)) {
+                        <mat-icon class="active-icon">check_circle</mat-icon> Activo
+                        } @else {
+                        <mat-icon class="inactive-icon">radio_button_unchecked</mat-icon> No incluido
+                        }
+                    </span>
+                </div>
+            </div>
+            <p class="addon-description">{{ mod.description }}</p>
+            @if (!isModuleActive(mod.key)) {
+            <a class="addon-contact-link" href="mailto:hola@zoovia.app?subject=Consulta módulo {{ mod.name }}">
+                <mat-icon>mail_outline</mat-icon> Consultar precio
+            </a>
+            }
+        </div>
         }
-        @if (subscription.modules.pets) {
-        <div class="core-chip"><mat-icon>pets</mat-icon> Mascotas</div>
-        }
-        @if (subscription.modules.medicalRecords) {
-        <div class="core-chip"><mat-icon>medical_services</mat-icon> Historiales Médicos</div>
-        }
-        <div class="core-chip"><mat-icon>settings</mat-icon> Configuración</div>
+    </div>
+    }
+
+    <!-- Datos de facturación (editables) -->
+    <h3 class="section-title">
+        <mat-icon>receipt_long</mat-icon>
+        Datos de facturación
+    </h3>
+    <div class="billing-form-card">
+        <form [formGroup]="billingForm" (ngSubmit)="saveBillingInfo()">
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Email para comprobantes</mat-label>
+                <input matInput formControlName="billingContactEmail" type="email" placeholder="facturacion@tuvet.com">
+                <mat-icon matSuffix>email</mat-icon>
+            </mat-form-field>
+
+            <div class="form-actions">
+                <button mat-flat-button color="primary" type="submit"
+                    [disabled]="savingBilling || billingForm.pristine">
+                    @if (savingBilling) {
+                    <mat-spinner diameter="18" style="display:inline-block;margin-right:8px"></mat-spinner>
+                    } Guardar datos
+                </button>
+                <span class="form-note">Solo podés modificar tus datos de contacto. Para cambios de plan, comunicate con
+                    Zoovia.</span>
+            </div>
+        </form>
     </div>
 
     } <!-- end @if -->

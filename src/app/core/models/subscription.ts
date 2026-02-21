@@ -4,50 +4,80 @@ export enum BusinessType {
     HYBRID = 'hybrid'                // Veterinaria + Peluquería
 }
 
-export type SubscriptionPlan = 'base_vet' | 'base_grooming' | 'complete_vet' | 'complete_grooming' | 'custom';
+/**
+ * Planes disponibles:
+ * - 'zoovia'          → Plan único todo incluido (clientes, mascotas, historiales, turnos, fidelización)
+ * - 'base_vet'        → Solo core veterinaria (legacy)
+ * - 'base_grooming'   → Solo core peluquería (legacy)
+ * - 'complete_vet'    → Bundle veterinaria completo (legacy)
+ * - 'complete_grooming' → Bundle peluquería completo (legacy)
+ * - 'custom'          → Módulos a medida
+ */
+export type SubscriptionPlan =
+    | 'zoovia'
+    | 'base_vet'
+    | 'base_grooming'
+    | 'complete_vet'
+    | 'complete_grooming'
+    | 'custom';
 
 export interface SubscriptionModules {
-    // Core modules (always included based on business type)
-    clients: boolean;           // Always true
-    pets: boolean;              // Always true
-    medicalRecords: boolean;    // True for veterinary, false for grooming-only
+    // Core modules (always included)
+    clients: boolean;
+    pets: boolean;
+    medicalRecords: boolean;
 
-    // Optional modules
-    appointments: boolean;      // Módulo de turnos
+    // Incluidos en Plan Zoovia
+    appointments: boolean;      // Módulo de turnos y agenda
+    loyalty: boolean;           // Módulo de fidelización (puntos y niveles)
+
+    // Add-ons futuros
     grooming: boolean;          // Módulo de peluquería
     inventory: boolean;         // Módulo de inventario
 }
 
 export interface SubscriptionFeatures {
-    maxUsers: number;           // Based on plan
-    maxPets: number;            // Based on plan (-1 = unlimited)
+    maxUsers: number;
+    maxPets: number;            // -1 = unlimited
     maxStorage: number;         // In MB
     customBranding: boolean;
     apiAccess: boolean;
 }
 
 export interface Subscription {
-    // Plan information
+    // Plan
     plan: SubscriptionPlan;
     businessType: BusinessType;
 
-    // Active modules
+    // Módulos activos
     modules: SubscriptionModules;
 
-    // Billing
+    // Facturación
     billingCycle: 'monthly' | 'yearly';
-    monthlyPrice: number;         // Calculated based on plan + modules
+    monthlyPrice: number;
     currency: 'USD' | 'ARS';
+    billingContactEmail?: string; // Email de contacto para facturación (editable por el vet)
 
-    // Status
+    // Estado
     status: 'active' | 'trial' | 'suspended' | 'cancelled';
-    trialEndsAt?: any; // Firestore Timestamp
-    currentPeriodStart: any; // Firestore Timestamp
-    currentPeriodEnd: any; // Firestore Timestamp
-    nextBillingDate: any; // Firestore Timestamp
+    trialEndsAt?: any;
+    currentPeriodStart: any;
+    currentPeriodEnd: any;
+    nextBillingDate: any;
 
-    // Payment
+    // Pago
     paymentMethod?: 'credit_card' | 'bank_transfer' | 'mercadopago';
-    lastPaymentDate?: any; // Firestore Timestamp
+    lastPaymentDate?: any;
     lastPaymentAmount?: number;
 }
+
+/** Módulos que incluye el Plan Zoovia por defecto */
+export const ZOOVIA_PLAN_MODULES: SubscriptionModules = {
+    clients: true,
+    pets: true,
+    medicalRecords: true,
+    appointments: true,
+    loyalty: true,
+    grooming: false,
+    inventory: false,
+};

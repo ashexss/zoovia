@@ -1,0 +1,158 @@
+<div class="superadmin-shell">
+
+    <!-- Header -->
+    <div class="sa-header">
+        <div class="sa-header-left">
+            <img src="icons/logo-zoovia.png" alt="Zoovia" class="sa-logo">
+            <div>
+                <h1>Superadmin</h1>
+                <span class="sa-subtitle">Panel de gestión de veterinarias</span>
+            </div>
+        </div>
+        <a routerLink="/dashboard" class="sa-back-btn">
+            <mat-icon>arrow_back</mat-icon> Volver al dashboard
+        </a>
+    </div>
+
+    <div class="sa-layout">
+
+        <!-- Lista de veterinarias -->
+        <div class="sa-vets-panel">
+            <div class="sa-panel-title">
+                <mat-icon>storefront</mat-icon>
+                Veterinarias ({{ vets.length }})
+            </div>
+
+            @if (loading) {
+            <div class="sa-loading"><mat-spinner diameter="36"></mat-spinner></div>
+            } @else if (vets.length === 0) {
+            <div class="sa-empty">No hay veterinarias registradas.</div>
+            } @else {
+            <div class="vet-list">
+                @for (vet of vets; track vet.id) {
+                <div class="vet-row" [class.selected]="selectedVet?.id === vet.id" (click)="selectVet(vet)">
+                    <div class="vet-row-main">
+                        <span class="vet-name">{{ vet.name }}</span>
+                        <span class="plan-badge" [class]="'plan-' + (vet.subscription?.plan ?? 'none')">
+                            {{ getPlanLabel(vet.subscription?.plan) }}
+                        </span>
+                    </div>
+                    <div class="vet-row-meta">
+                        <span class="status-dot" [class]="'s-' + (vet.subscription?.status ?? 'none')"></span>
+                        {{ getStatusLabel(vet.subscription?.status) }}
+                        <span class="vet-email">{{ vet.email }}</span>
+                    </div>
+                </div>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Panel de edición -->
+        <div class="sa-edit-panel">
+            @if (!selectedVet) {
+            <div class="sa-empty-edit">
+                <mat-icon>touch_app</mat-icon>
+                <span>Seleccioná una veterinaria para editar su suscripción</span>
+            </div>
+            } @else {
+            <div class="sa-panel-title">
+                <mat-icon>edit</mat-icon>
+                {{ selectedVet.name }}
+            </div>
+
+            <form [formGroup]="subForm" (ngSubmit)="saveSubscription()">
+
+                <!-- Plan -->
+                <div class="form-row">
+                    <label>Plan</label>
+                    <mat-form-field appearance="outline">
+                        <mat-select formControlName="plan" (selectionChange)="onPlanChange($event.value)">
+                            <mat-option value="zoovia">Plan Zoovia (todo incluido)</mat-option>
+                            <mat-option value="base_vet">Base Veterinaria</mat-option>
+                            <mat-option value="custom">Personalizado</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <!-- Estado -->
+                <div class="form-row">
+                    <label>Estado</label>
+                    <mat-form-field appearance="outline">
+                        <mat-select formControlName="status">
+                            <mat-option value="active">✅ Activa</mat-option>
+                            <mat-option value="trial">🕐 Prueba</mat-option>
+                            <mat-option value="suspended">⚠️ Suspendida</mat-option>
+                            <mat-option value="cancelled">❌ Cancelada</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <!-- Precio -->
+                <div class="form-row">
+                    <label>Precio mensual (ARS)</label>
+                    <mat-form-field appearance="outline">
+                        <span matPrefix>$&nbsp;</span>
+                        <input matInput type="number" formControlName="monthlyPrice">
+                    </mat-form-field>
+                </div>
+
+                <!-- Facturación -->
+                <div class="form-row">
+                    <label>Ciclo de facturación</label>
+                    <mat-form-field appearance="outline">
+                        <mat-select formControlName="billingCycle">
+                            <mat-option value="monthly">Mensual</mat-option>
+                            <mat-option value="yearly">Anual</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <!-- Vencimiento -->
+                <div class="form-row">
+                    <label>Vencimiento (YYYY-MM-DD)</label>
+                    <mat-form-field appearance="outline">
+                        <input matInput type="date" formControlName="nextBillingDate">
+                        <mat-icon matSuffix>event</mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <!-- Módulos -->
+                <div class="modules-section">
+                    <div class="modules-title">Módulos activos</div>
+                    <div class="modules-toggles">
+                        @for (mod of allModules; track mod.key) {
+                        <div class="module-toggle-row">
+                            <mat-slide-toggle [formControlName]="'mod_' + mod.key" color="primary">
+                                <mat-icon class="mod-icon">{{ mod.icon }}</mat-icon>
+                                {{ mod.name }}
+                            </mat-slide-toggle>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="form-actions">
+                    <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+                        @if (saving) {
+                        <mat-spinner diameter="18" style="display:inline-block;margin-right:8px"></mat-spinner>
+                        }
+                        Guardar suscripción
+                    </button>
+                    <button mat-stroked-button type="button" (click)="selectedVet = null">
+                        Cancelar
+                    </button>
+                </div>
+
+                @if (saveSuccess) {
+                <div class="save-success">
+                    <mat-icon>check_circle</mat-icon> Suscripción actualizada correctamente.
+                </div>
+                }
+
+            </form>
+            }
+        </div>
+    </div>
+</div>

@@ -165,39 +165,49 @@ export class VeterinaryService {
      * write sensible defaults so the new subscription UI works without errors.
      * This is a one-time, self-healing migration — safe to call on every load.
      */
+    /**
+     * Migration helper: if a veterinary document has no subscription at all,
+     * writes minimal placeholder data so the UI doesn't break.
+     * The actual plan is set manually by the superadmin.
+     */
     async ensureSubscription(id: string): Promise<void> {
         const vetDoc = doc(this.firestore, 'veterinaries', id);
         const snapshot = await getDoc(vetDoc);
         if (!snapshot.exists()) return;
 
         const data = snapshot.data() as any;
-        if (data?.subscription?.modules) return; // already migrated
+        // Already has a subscription — nothing to do
+        if (data?.subscription?.plan) return;
 
         const { BusinessType } = await import('../models/subscription');
-        const defaultSub = {
+
+        const placeholderSub = {
             plan: 'base_vet',
-            businessType: BusinessType.VETERINARY,
+            businessType: data?.businessType ?? BusinessType.VETERINARY,
             modules: {
                 clients: true,
                 pets: true,
                 medicalRecords: true,
                 appointments: false,
+                loyalty: false,
                 grooming: false,
-                inventory: false
+                inventory: false,
             },
             billingCycle: 'monthly',
-            monthlyPrice: 0,     // existing customers get grandfathered
-            currency: 'USD',
+            monthlyPrice: 0,
+            currency: 'ARS',
             status: 'active',
+            billingContactEmail: data?.email ?? '',
             currentPeriodStart: Timestamp.now(),
-            currentPeriodEnd: Timestamp.fromDate(new Date(Date.now() + 365 * 86400000))
+            currentPeriodEnd: Timestamp.fromDate(new Date(Date.now() + 30 * 86400000)),
+            nextBillingDate: Timestamp.fromDate(new Date(Date.now() + 30 * 86400000)),
         };
 
         await updateDoc(vetDoc, {
-            businessType: BusinessType.VETERINARY,
-            subscription: defaultSub
+            businessType: placeholderSub.businessType,
+            subscription: placeholderSub
         });
 
-        console.log('[VeterinaryService] Migration: subscription data added for', id);
+        console.log('[VeterinaryService] ensureSubscription: placeholder created for', id);
     }
 }

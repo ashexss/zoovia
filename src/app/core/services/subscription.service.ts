@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { VeterinaryService } from './veterinary.service';
-import { Subscription, SubscriptionModules, BusinessType, SubscriptionPlan } from '../models/subscription';
+import { Subscription, SubscriptionModules, BusinessType, SubscriptionPlan, ZOOVIA_PLAN_MODULES } from '../models/subscription';
 import { Veterinary } from '../models';
 
 @Injectable({
@@ -15,11 +15,12 @@ export class SubscriptionService {
      */
     private readonly PRICES = {
         PLANS: {
+            zoovia: 59900,          // Plan único todo incluido (ARS)
             base_vet: 15,
             base_grooming: 12,
             complete_vet: 35,
             complete_grooming: 25,
-            custom: 0 // Calculated base + modules
+            custom: 0
         },
         MODULES: {
             appointments: 8,
@@ -53,45 +54,49 @@ export class SubscriptionService {
     }
 
     /**
-     * Calculate monthly price based on plan and modules
+     * Calculate monthly price based on plan and modules.
+     * For Plan Zoovia returns the fixed ARS price.
      */
     calculatePrice(plan: SubscriptionPlan, modules: SubscriptionModules): number {
-        // Return fixed price for bundle plans
+        if (plan === 'zoovia') return this.PRICES.PLANS.zoovia;
         if (plan === 'complete_vet') return this.PRICES.PLANS.complete_vet;
         if (plan === 'complete_grooming') return this.PRICES.PLANS.complete_grooming;
 
-        // For base/custom plans, calculate base + add-ons
         let total = 0;
-
-        // Base price
         if (plan === 'base_vet') total += this.PRICES.PLANS.base_vet;
         if (plan === 'base_grooming') total += this.PRICES.PLANS.base_grooming;
-
-        // Add-ons
         if (modules.appointments) total += this.PRICES.MODULES.appointments;
-        // Grooming module is extra only for vets, basically included in grooming base
-        // But let's assume grooming module cost is for VETs usage.
-        if (modules.grooming && plan !== 'base_grooming') {
-            total += this.PRICES.MODULES.grooming;
-        }
+        if (modules.grooming && plan !== 'base_grooming') total += this.PRICES.MODULES.grooming;
         if (modules.inventory) total += this.PRICES.MODULES.inventory;
-
         return total;
     }
 
+    /** Returns true if the vet is on the Zoovia all-inclusive plan */
+    isPlanZoovia(): Observable<boolean> {
+        return this.veterinaryService.getCurrentVeterinary().pipe(
+            map(vet => vet?.subscription?.plan === 'zoovia')
+        );
+    }
+
     /**
-     * Helper to determine default modules for a business type
+     * Helper to determine default modules for a business type.
+     * For Plan Zoovia use ZOOVIA_PLAN_MODULES directly.
      */
     getDefaultModules(type: BusinessType): SubscriptionModules {
-        const defaults: SubscriptionModules = {
+        return {
             clients: true,
             pets: true,
             medicalRecords: type === BusinessType.VETERINARY || type === BusinessType.HYBRID,
             appointments: false,
+            loyalty: false,
             grooming: type === BusinessType.GROOMING,
             inventory: false
         };
-        return defaults;
+    }
+
+    /** Modules for the Zoovia plan (all core + appointments + loyalty) */
+    getZooviaModules(): SubscriptionModules {
+        return { ...ZOOVIA_PLAN_MODULES };
     }
 
     /**

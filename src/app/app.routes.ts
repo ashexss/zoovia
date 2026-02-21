@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard, loginGuard, landingGuard } from './core/guards/auth.guard';
 import { moduleAccessGuard } from './core/guards/module-access.guard';
+import { superadminGuard } from './core/guards/superadmin.guard';
 
 export const routes: Routes = [
     {
@@ -65,6 +66,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/subscription/module-restricted.component').then(m => m.ModuleRestrictedComponent)
             }
         ]
+    },
+    {
+        path: 'superadmin',
+        loadComponent: () => import('./features/superadmin/superadmin-dashboard.component').then(m => m.SuperadminDashboardComponent),
+        canActivate: [superadminGuard]
     },
     {
         path: '**',

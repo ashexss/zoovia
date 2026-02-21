@@ -1,73 +1,109 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { CommonModule, DecimalPipe } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 import { VeterinaryService } from '../../core/services/veterinary.service';
-import { SubscriptionService } from '../../core/services/subscription.service';
-import { Veterinary, Subscription, SubscriptionModules, BusinessType } from '../../core/models';
+import { Veterinary, Subscription, SubscriptionModules } from '../../core/models';
 
 interface ModuleInfo {
     key: keyof SubscriptionModules;
     name: string;
     icon: string;
     description: string;
-    price: number;
-    available: boolean; // true if compatible with this business type
+    /** true = incluido en el plan base/zoovia, false = add-on */
+    includedInBase: boolean;
 }
 
 @Component({
     selector: 'app-subscription-overview',
     standalone: true,
     imports: [
-        CommonModule, RouterModule, MatCardModule, MatButtonModule,
-        MatIconModule, MatChipsModule, MatDividerModule,
-        MatSlideToggleModule, MatSnackBarModule, MatProgressSpinnerModule
+        CommonModule, DecimalPipe, ReactiveFormsModule,
+        MatCardModule, MatButtonModule, MatIconModule, MatDividerModule,
+        MatSnackBarModule, MatProgressSpinnerModule,
+        MatFormFieldModule, MatInputModule
     ],
     templateUrl: './subscription-overview.component.html',
     styleUrls: ['./subscription-overview.component.scss']
 })
 export class SubscriptionOverviewComponent implements OnInit {
     private vetService = inject(VeterinaryService);
-    private subscriptionService = inject(SubscriptionService);
     private snackBar = inject(MatSnackBar);
+    private fb = inject(FormBuilder);
 
     veterinary?: Veterinary;
-    saving = false;
+    savingBilling = false;
+    billingForm!: FormGroup;
 
+    /** Definición de todos los módulos del sistema */
     readonly allModules: ModuleInfo[] = [
         {
-            key: 'appointments', name: 'Turnos', icon: 'event',
-            description: 'Agenda diaria, turnos por orden de llegada y acceso rápido al historial.',
-            price: 8, available: true
+            key: 'clients', name: 'Clientes y Mascotas', icon: 'pets',
+            description: 'Gestión completa de clientes, mascotas e historiales clínicos.',
+            includedInBase: true
+        },
+        {
+            key: 'medicalRecords', name: 'Historiales Clínicos', icon: 'medical_services',
+            description: 'Registros de consultas, diagnósticos y tratamientos por mascota.',
+            includedInBase: true
+        },
+        {
+            key: 'appointments', name: 'Turnos y Agenda', icon: 'event',
+            description: 'Agenda diaria, turnos programados y walk-ins con panel de estadísticas.',
+            includedInBase: true
+        },
+        {
+            key: 'loyalty', name: 'Programa de Fidelización', icon: 'star',
+            description: 'Sistema de puntos por visita, niveles Bronce/Plata/Oro/Platino y canje.',
+            includedInBase: true
         },
         {
             key: 'grooming', name: 'Peluquería', icon: 'content_cut',
-            description: 'Servicios de peluquería, precios y agenda de grooming canino.',
-            price: 10, available: true
+            description: 'Agenda separada para servicios de grooming y peluquería canina.',
+            includedInBase: false
         },
         {
             key: 'inventory', name: 'Inventario', icon: 'inventory',
-            description: 'Control de stock de medicamentos, insumos y alertas de bajo stock.',
-            price: 12, available: true
-        }
+            description: 'Control de stock de medicamentos, insumos y alertas de reposición.',
+            includedInBase: false
+        },
     ];
 
     ngOnInit() {
+        this.billingForm = this.fb.group({
+            billingContactEmail: ['', [Validators.email]]
+        });
+
         this.vetService.getCurrentVeterinary().subscribe(vet => {
             this.veterinary = vet;
+            if (vet?.subscription?.billingContactEmail) {
+                this.billingForm.patchValue({
+                    billingContactEmail: vet.subscription.billingContactEmail
+                });
+                this.billingForm.markAsPristine();
+            }
         });
     }
 
     get subscription(): Subscription | undefined {
         return this.veterinary?.subscription;
+    }
+
+    get planDisplayName(): string {
+        const plan = this.subscription?.plan;
+        if (plan === 'zoovia') return 'Plan Zoovia';
+        if (plan === 'base_vet') return 'Plan Base Veterinaria';
+        if (plan === 'complete_vet') return 'Plan Completo';
+        if (plan === 'custom') return 'Plan Personalizado';
+        return plan ?? 'Sin plan';
     }
 
     get statusLabel(): string {
@@ -76,79 +112,71 @@ export class SubscriptionOverviewComponent implements OnInit {
             const end = this.subscription?.trialEndsAt?.toDate?.();
             if (end) {
                 const days = Math.ceil((end.getTime() - Date.now()) / 86400000);
-                return `Prueba gratuita — ${days} días restantes`;
+                return `Período de prueba — quedan ${days} días`;
             }
-            return 'Prueba gratuita';
+            return 'Período de prueba activo';
         }
-        if (s === 'active') return 'Plan activo';
-        if (s === 'suspended') return '⚠️ Suspendida';
-        if (s === 'cancelled') return 'Cancelada';
+        if (s === 'active') return 'Suscripción activa';
+        if (s === 'suspended') return 'Cuenta suspendida — contactá a Zoovia';
+        if (s === 'cancelled') return 'Suscripción cancelada';
         return '—';
     }
 
-    get statusColor(): string {
-        const s = this.subscription?.status;
-        if (s === 'active') return 'success';
-        if (s === 'trial') return 'info';
-        return 'warn';
+    get nextBillingFormatted(): string {
+        const date = this.subscription?.nextBillingDate?.toDate?.();
+        if (!date) return '—';
+        return date.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
-    get currentMonthlyPrice(): number {
-        if (!this.veterinary) return 0;
-        return this.subscriptionService.calculatePrice(
-            this.veterinary.subscription.plan,
-            this.veterinary.subscription.modules
-        );
+    get paymentMethodLabel(): string {
+        const pm = this.subscription?.paymentMethod;
+        if (pm === 'bank_transfer') return 'Transferencia bancaria';
+        if (pm === 'credit_card') return 'Tarjeta de crédito';
+        if (pm === 'mercadopago') return 'MercadoPago';
+        return 'A coordinar';
     }
 
     isModuleActive(key: keyof SubscriptionModules): boolean {
-        return this.subscription?.modules[key] === true;
+        return this.subscription?.modules?.[key] === true;
     }
 
-    availableModules(): ModuleInfo[] {
-        // grooming module is not offered as add-on to pure grooming shops (already bundled)
-        return this.allModules.filter(m => {
-            if (m.key === 'grooming' && this.veterinary?.businessType === BusinessType.GROOMING) {
-                return false;
-            }
-            return true;
-        });
+    /**
+     * Módulos que están incluidos en el plan actual (se muestran como chips verdes).
+     * Si el plan es 'zoovia', se determinan por `includedInBase`.
+     * Si el plan es otro, se muestran los que estén activos en subscription.modules.
+     */
+    get includedModules(): ModuleInfo[] {
+        if (this.subscription?.plan === 'zoovia') {
+            return this.allModules.filter(m => m.includedInBase);
+        }
+        return this.allModules.filter(m => this.isModuleActive(m.key));
     }
 
-    async toggleModule(module: ModuleInfo) {
-        if (!this.veterinary || this.saving) return;
-        this.saving = true;
+    /** Módulos que son add-ons (peluquería, inventario, etc.) */
+    get addonModules(): ModuleInfo[] {
+        return this.allModules.filter(m => !m.includedInBase);
+    }
+
+    async saveBillingInfo() {
+        if (!this.veterinary || !this.subscription || this.billingForm.invalid || this.billingForm.pristine) return;
+        this.savingBilling = true;
 
         try {
-            const currentModules = { ...this.veterinary.subscription.modules };
-            currentModules[module.key] = !currentModules[module.key];
-
+            const email = this.billingForm.value.billingContactEmail ?? '';
+            const currentSub = this.subscription;
             await this.vetService.updateVeterinary(this.veterinary.id, {
                 subscription: {
-                    ...this.veterinary.subscription,
-                    modules: currentModules
-                }
+                    ...currentSub,
+                    billingContactEmail: email
+                } as typeof currentSub
             });
-
-            // Refresh local state
-            const updated = await this.vetService.getCurrentVeterinary().toPromise();
-            if (updated) this.veterinary = updated;
-
-            const action = currentModules[module.key] ? 'activado' : 'desactivado';
-            this.snackBar.open(`Módulo "${module.name}" ${action}`, 'OK', { duration: 3000 });
+            this.billingForm.markAsPristine();
+            this.snackBar.open('Datos de facturación guardados', 'OK', { duration: 3000 });
         } catch (e) {
             console.error(e);
-            this.snackBar.open('Error al actualizar el módulo', 'Cerrar', { duration: 3000 });
+            this.snackBar.open('Error al guardar. Intentá de nuevo.', 'Cerrar', { duration: 3000 });
         } finally {
-            this.saving = false;
+            this.savingBilling = false;
         }
-    }
-
-    getBusinessTypeLabel(): string {
-        const bt = this.veterinary?.businessType;
-        if (bt === BusinessType.VETERINARY) return 'Veterinaria';
-        if (bt === BusinessType.GROOMING) return 'Peluquería';
-        if (bt === BusinessType.HYBRID) return 'Veterinaria + Peluquería';
-        return 'Negocio';
     }
 }
