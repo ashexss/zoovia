@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -34,14 +34,17 @@ interface ModuleInfo {
     templateUrl: './subscription-overview.component.html',
     styleUrls: ['./subscription-overview.component.scss']
 })
-export class SubscriptionOverviewComponent implements OnInit {
+export class SubscriptionOverviewComponent implements OnChanges {
     private vetService = inject(VeterinaryService);
     private snackBar = inject(MatSnackBar);
     private fb = inject(FormBuilder);
 
-    veterinary?: Veterinary;
+    @Input() veterinary?: Veterinary;
+
     savingBilling = false;
-    billingForm!: FormGroup;
+    billingForm: FormGroup = this.fb.group({
+        billingContactEmail: ['', [Validators.email]]
+    });
 
     /** Definición de todos los módulos del sistema */
     readonly allModules: ModuleInfo[] = [
@@ -77,20 +80,15 @@ export class SubscriptionOverviewComponent implements OnInit {
         },
     ];
 
-    ngOnInit() {
-        this.billingForm = this.fb.group({
-            billingContactEmail: ['', [Validators.email]]
-        });
-
-        this.vetService.getCurrentVeterinary().subscribe(vet => {
-            this.veterinary = vet;
-            if (vet?.subscription?.billingContactEmail) {
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes['veterinary'] && this.veterinary) {
+            if (this.veterinary.subscription?.billingContactEmail) {
                 this.billingForm.patchValue({
-                    billingContactEmail: vet.subscription.billingContactEmail
+                    billingContactEmail: this.veterinary.subscription.billingContactEmail
                 });
                 this.billingForm.markAsPristine();
             }
-        });
+        }
     }
 
     get subscription(): Subscription | undefined {

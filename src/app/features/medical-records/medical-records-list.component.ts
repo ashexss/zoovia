@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
@@ -12,7 +12,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { combineLatest } from 'rxjs';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { combineLatest, Observable, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, take } from 'rxjs/operators';
 
 import { MedicalRecord, Pet, Client, MedicalRecordType } from '../../core/models';
 import { MedicalRecordService, PetService, ClientService } from '../../core/services';
@@ -33,7 +35,8 @@ import { MedicalRecordService, PetService, ClientService } from '../../core/serv
     MatCardModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
-    MatChipsModule
+    MatChipsModule,
+    MatAutocompleteModule
   ],
   templateUrl: './medical-records-list.component.html',
   styleUrls: ['./medical-records-list.component.scss']
@@ -43,11 +46,21 @@ export class MedicalRecordsListComponent implements OnInit {
   private petService = inject(PetService);
   private clientService = inject(ClientService);
   private cdr = inject(ChangeDetectorRef);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   displayedColumns: string[] = ['date', 'type', 'pet', 'client', 'diagnosis', 'veterinarian', 'actions'];
   dataSource = new MatTableDataSource<MedicalRecord>([]);
   searchControl = new FormControl('');
   loading = false;
+
+  // Search and Selection State
+  clientSearchControl = new FormControl('');
+  searchResults: Client[] = [];
+  loadingSearch = false;
+  selectedClient: Client | null = null;
+  clientPets$: Observable<Pet[]> | undefined;
+  selectedPetId: string | null = null;
 
   // Cache for pets and clients
   petsMap = new Map<string, Pet>();
@@ -57,7 +70,27 @@ export class MedicalRecordsListComponent implements OnInit {
   @ViewChild(MatSort) sort!: MatSort;
 
   ngOnInit(): void {
-    this.loadData();
+    this.setupClientSearch();
+    this.checkQueryParams();
+  }
+
+  checkQueryParams() {
+    this.route.queryParams.pipe(take(1)).subscribe(params => {
+      const clientId = params['clientId'];
+      const petId = params['petId'];
+
+      if (clientId && petId) {
+        this.loadingSearch = true;
+        this.clientService.getClientById(clientId).pipe(take(1)).subscribe(client => {
+          this.loadingSearch = false;
+          if (client) {
+            this.selectClient(client);
+            // Must trigger selectPet immediately next
+            this.selectPet(petId);
+          }
+        });
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -65,24 +98,78 @@ export class MedicalRecordsListComponent implements OnInit {
     this.dataSource.sort = this.sort;
   }
 
+  setupClientSearch() {
+    this.clientSearchControl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(term => {
+      if (!term || term.trim().length < 2) {
+        this.searchResults = [];
+        return;
+      }
+      this.loadingSearch = true;
+      this.clientService.searchClients(term).pipe(
+        take(1),
+        catchError(() => of([]))
+      ).subscribe((results: Client[] | undefined) => {
+        this.searchResults = (results || []).slice(0, 5);
+        this.loadingSearch = false;
+        this.cdr.detectChanges();
+      });
+    });
+  }
+
+  selectClient(client: Client) {
+    this.selectedClient = client;
+    this.clientSearchControl.setValue('');
+    this.searchResults = [];
+    this.selectedPetId = null;
+    this.dataSource.data = [];
+    this.clientPets$ = this.petService.getPetsByClient(client.id);
+  }
+
+  selectPet(petId: string) {
+    this.selectedPetId = petId;
+    this.loadDataForPet(petId);
+  }
+
+  clearSelection() {
+    this.selectedClient = null;
+    this.selectedPetId = null;
+    this.clientPets$ = undefined;
+    this.dataSource.data = [];
+
+    // Clear URL params so they don't persist on refresh or navigation 
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { clientId: null, petId: null },
+      queryParamsHandling: 'merge'
+    });
+  }
+
   /**
-   * Load all data (records, pets, clients)
+   * Load data only for the selected pet
    */
-  loadData(): void {
+  loadDataForPet(petId: string): void {
+    if (!petId) return;
     this.loading = true;
 
     combineLatest([
-      this.recordService.getMedicalRecords(),
+      this.recordService.getMedicalRecordsByPet(petId),
       this.petService.getPets(),
       this.clientService.getClients()
-    ]).subscribe({
-      next: ([records, pets, clients]) => {
+    ]).pipe(take(1)).subscribe({
+      next: ([records, pets, clients]: [MedicalRecord[] | undefined, Pet[] | undefined, Client[] | undefined]) => {
         // Build caches
-        pets.forEach(pet => this.petsMap.set(pet.id, pet));
-        clients.forEach(client => this.clientsMap.set(client.id, client));
+        if (pets) {
+          pets.forEach((pet: Pet) => this.petsMap.set(pet.id, pet));
+        }
+        if (clients) {
+          clients.forEach((client: Client) => this.clientsMap.set(client.id, client));
+        }
 
         // Set records
-        this.dataSource.data = records;
+        this.dataSource.data = records || [];
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -102,7 +189,9 @@ export class MedicalRecordsListComponent implements OnInit {
     if (confirm(`¿Está seguro de eliminar el registro médico de ${petName}?`)) {
       try {
         await this.recordService.deleteRecord(record.id);
-        this.loadData();
+        if (this.selectedPetId) {
+          this.loadDataForPet(this.selectedPetId);
+        }
       } catch (error) {
         console.error('Error deleting record:', error);
         alert('Error al eliminar el registro');
@@ -135,10 +224,8 @@ export class MedicalRecordsListComponent implements OnInit {
   getTypeLabel(type: MedicalRecordType): string {
     const labels: Record<MedicalRecordType, string> = {
       consultation: 'Consulta',
-      vaccination: 'Vacunación',
       surgery: 'Cirugía',
-      treatment: 'Tratamiento',
-      checkup: 'Chequeo'
+      checkup: 'Control'
     };
     return labels[type] || type;
   }
@@ -149,9 +236,7 @@ export class MedicalRecordsListComponent implements OnInit {
   getTypeColor(type: MedicalRecordType): string {
     const colors: Record<MedicalRecordType, string> = {
       consultation: 'primary',
-      vaccination: 'accent',
       surgery: 'warn',
-      treatment: 'primary',
       checkup: 'accent'
     };
     return colors[type] || 'primary';

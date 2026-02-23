@@ -45,6 +45,10 @@
             }
             <span class="spacer"></span>
 
+            <div class="toolbar-date-time">
+                {{ formattedDate }} | {{ formattedTime }}
+            </div>
+
             @if (veterinary$ | async; as vet) {
             <div class="toolbar-plan-badge" [class.active]="vet.subscription?.status === 'active'">
                 {{ vet.subscription?.plan || 'FREE' | uppercase }}
@@ -64,6 +68,14 @@
                     <span>{{ user.role }}</span>
                 </button>
                 <mat-divider></mat-divider>
+
+                @if (user.role === 'superadmin') {
+                <button mat-menu-item routerLink="/superadmin">
+                    <mat-icon>admin_panel_settings</mat-icon>
+                    <span>Panel Superadmin</span>
+                </button>
+                }
+
                 <button mat-menu-item (click)="logout()">
                     <mat-icon>logout</mat-icon>
                     <span>Cerrar Sesión</span>

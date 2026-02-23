@@ -4,7 +4,7 @@
         <p>Administrá la información y suscripción de tu veterinaria</p>
     </div>
 
-    <mat-tab-group animationDuration="200ms" class="settings-tabs">
+    <mat-tab-group animationDuration="200ms" class="settings-tabs" dynamicHeight>
 
         <!-- TAB 1: General Configuration -->
         <mat-tab>
@@ -353,7 +353,7 @@
                 <mat-icon>rocket_launch</mat-icon>&nbsp;Suscripción
             </ng-template>
             <div class="tab-content-pad">
-                <app-subscription-overview></app-subscription-overview>
+                <app-subscription-overview [veterinary]="veterinary"></app-subscription-overview>
             </div>
         </mat-tab>
 

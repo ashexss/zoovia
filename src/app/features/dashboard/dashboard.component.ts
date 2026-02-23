@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -27,7 +27,7 @@ import { VeterinaryService, NavigationService, MenuItem } from '../../core/servi
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
     private authService = inject(AuthService);
     private veterinaryService = inject(VeterinaryService);
     private navigationService = inject(NavigationService);
@@ -37,8 +37,33 @@ export class DashboardComponent implements OnInit {
     veterinary$ = this.veterinaryService.getCurrentVeterinary();
     menuItems$: Observable<MenuItem[]> | undefined;
 
+    currentDate = new Date();
+    private timerInterval: any;
+
     ngOnInit() {
         this.menuItems$ = this.navigationService.getMenuItems();
+        // Update time every minute
+        this.timerInterval = setInterval(() => {
+            this.currentDate = new Date();
+        }, 60000);
+    }
+
+    ngOnDestroy() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+    }
+
+    get formattedDate(): string {
+        return this.currentDate.toLocaleDateString('es-AR', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
+    }
+
+    get formattedTime(): string {
+        return this.currentDate.toLocaleTimeString('es-AR', {
+            hour: '2-digit', minute: '2-digit'
+        });
     }
 
     async logout(): Promise<void> {

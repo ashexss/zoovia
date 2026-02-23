@@ -44,8 +44,8 @@ export class LoyaltyService {
     private firestore = inject(Firestore);
     private injector = inject(Injector);
 
-    private txCol() {
-        return collection(this.firestore, 'loyalty_transactions');
+    private txCol(veterinaryId: string) {
+        return collection(this.firestore, `veterinaries/${veterinaryId}/loyalty_transactions`);
     }
 
     // ── Read ────────────────────────────────────────────────────────────────────
@@ -53,8 +53,7 @@ export class LoyaltyService {
     /** Get last N transactions for a client */
     getHistory(veterinaryId: string, clientId: string, count = 20): Observable<LoyaltyTransaction[]> {
         const q = query(
-            this.txCol(),
-            where('veterinaryId', '==', veterinaryId),
+            this.txCol(veterinaryId),
             where('clientId', '==', clientId),
             orderBy('createdAt', 'desc'),
             limit(count)
@@ -90,7 +89,7 @@ export class LoyaltyService {
         const newBalance = Math.max(0, currentBalance + points);
 
         // Record transaction
-        await addDoc(this.txCol(), {
+        await addDoc(this.txCol(veterinaryId), {
             veterinaryId,
             clientId,
             type,
@@ -104,8 +103,8 @@ export class LoyaltyService {
         });
 
         // Update client balance + tier + totals
-        const clientRef = doc(this.firestore, 'clients', clientId);
-        const clientSnap = await getDoc(clientRef);
+        const clientRef = doc(this.firestore, `veterinaries/${veterinaryId}/clients`, clientId);
+        const clientSnap = await runInInjectionContext(this.injector, () => getDoc(clientRef));
         if (!clientSnap.exists()) return;
 
         const current = clientSnap.data() as any;

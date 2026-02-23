@@ -71,7 +71,7 @@ export class ClientsListComponent implements OnInit {
           console.log('[ClientsList] Received clients:', clients);
           this.dataSource.data = clients;
           this.loading = false;
-          this.cdr.detectChanges(); // Force change detection
+          this.cdr.markForCheck(); // Safely flag for change detection
           console.log('[ClientsList] Change detection triggered, loading =', this.loading);
         });
       },
@@ -79,7 +79,7 @@ export class ClientsListComponent implements OnInit {
         this.zone.run(() => {
           console.error('[ClientsList] Error loading clients:', error);
           this.loading = false;
-          this.cdr.detectChanges(); // Force change detection
+          this.cdr.markForCheck(); // Safely flag for change detection
         });
       },
       complete: () => {
@@ -99,15 +99,20 @@ export class ClientsListComponent implements OnInit {
       )
       .subscribe(searchTerm => {
         if (searchTerm && searchTerm.trim()) {
-          this.loading = true;
+          Promise.resolve().then(() => {
+            this.loading = true;
+            this.cdr.markForCheck();
+          });
           this.clientService.searchClients(searchTerm.trim()).subscribe({
             next: (clients) => {
               this.dataSource.data = clients;
               this.loading = false;
+              this.cdr.markForCheck();
             },
             error: (error) => {
               console.error('Error searching clients:', error);
               this.loading = false;
+              this.cdr.markForCheck();
             }
           });
         } else {

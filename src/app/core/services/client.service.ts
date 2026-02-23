@@ -112,7 +112,7 @@ export class ClientService {
                     clientsCol
                 );
 
-                return collectionData(q, { idField: 'id' }).pipe(
+                return runInInjectionContext(this.injector, () => collectionData(q, { idField: 'id' })).pipe(
                     map(clients => {
                         const filtered = (clients as Client[]).filter(client => {
                             const term = searchTerm.toLowerCase();

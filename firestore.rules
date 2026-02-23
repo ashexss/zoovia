@@ -14,29 +14,35 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.veterinaryId == veterinaryId;
     }
     
+    // Helper function to check if user is a superadmin
+    function isSuperadmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+    
     // Users collection
     match /users/{userId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
-      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperadmin());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isSuperadmin());
     }
     
     // Veterinary Context (New multi-tenant structure)
     match /veterinaries/{vetId} {
-      allow read, update: if belongsToVeterinary(vetId);
-      allow create, delete: if false;
+      allow read, update: if belongsToVeterinary(vetId) || isSuperadmin();
+      allow create, delete: if isSuperadmin();
       
       // All Subcollections under a veterinary (clients, pets, medicalRecords, appointments)
       match /{document=**} {
-        allow read, write: if belongsToVeterinary(vetId);
+        allow read, write: if belongsToVeterinary(vetId) || isSuperadmin();
       }
     }
     
     // For Collection Group Queries (required for pets/medicalRecords cross-client queries)
     match /{path=**}/pets/{petId} {
-      allow read: if belongsToVeterinary(resource.data.veterinaryId);
+      allow read: if belongsToVeterinary(resource.data.veterinaryId) || isSuperadmin();
     }
     match /{path=**}/medicalRecords/{recordId} {
-      allow read: if belongsToVeterinary(resource.data.veterinaryId);
+      allow read: if belongsToVeterinary(resource.data.veterinaryId) || isSuperadmin();
     }
   }
 }

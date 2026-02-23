@@ -62,7 +62,7 @@
                 @if (selectedClient) {
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Mascota</mat-label>
-                    <mat-select formControlName="petId" [disabled]="loadingPets">
+                    <mat-select formControlName="petId">
                         @if (loadingPets) {
                         <mat-option disabled>Cargando...</mat-option>
                         }

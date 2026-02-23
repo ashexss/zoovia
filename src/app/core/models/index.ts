@@ -217,7 +217,7 @@ export interface Pet {
 }
 
 // Medical record types
-export type MedicalRecordType = 'consultation' | 'vaccination' | 'surgery' | 'treatment' | 'checkup';
+export type MedicalRecordType = 'consultation' | 'surgery' | 'checkup';
 
 // Prescription interface
 export interface Prescription {
@@ -237,10 +237,11 @@ export interface MedicalRecord {
     date: Timestamp;
     type: MedicalRecordType;
     veterinarianId: string;
-    diagnosis: string;
-    treatment: string;
-    notes: string;
+    diagnosisAndTreatment: string;
+    notes?: string;
     prescriptions: Prescription[];
+    vaccines?: { name: string; expirationDate: Timestamp; }[];
+    deworming?: { name: string; type: 'internal' | 'external' | 'both'; expirationDate: Timestamp; }[];
     attachments?: string[];
     createdAt: Timestamp;
 }

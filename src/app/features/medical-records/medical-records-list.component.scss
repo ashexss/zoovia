@@ -4,12 +4,111 @@
     align-items: center;
     width: 100%;
     margin-bottom: 1rem;
+    padding: 24px 24px 0 24px;
+    box-sizing: border-box;
 
     h2 {
         margin: 0;
         font-size: 1.5rem;
         font-weight: 500;
         flex: 1; // Allow h2 to grow and push button to the right
+    }
+}
+
+.search-container {
+    max-width: 800px;
+    margin: 0 auto 32px;
+}
+
+.search-field {
+    width: 100%;
+}
+
+.search-result {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+
+    .name {
+        font-weight: 500;
+    }
+
+    .dni {
+        font-size: 13px;
+        color: #7f8c8d;
+    }
+}
+
+.selected-client-info {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 16px;
+    border: 1px solid #e9ecef;
+}
+
+.client-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+
+    h3 {
+        margin: 0;
+        color: #2c3e50;
+        font-weight: 600;
+    }
+}
+
+.pets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.pet-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: #00897b;
+    }
+
+    .pet-avatar {
+        background: #e0f2f1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+
+        mat-icon {
+            color: #00695c;
+        }
+    }
+}
+
+.no-pets-msg {
+    color: #666;
+    font-style: italic;
+    grid-column: 1 / -1;
+}
+
+.active-pet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 16px 0 24px;
+    padding: 16px 24px;
+    background: #e0f2f1;
+    border-radius: 8px;
+
+    h3 {
+        margin: 0;
+        color: #00695c;
+        font-weight: 600;
     }
 }
 

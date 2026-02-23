@@ -1,26 +1,93 @@
 <mat-card>
-    <mat-card-header>
-        <mat-card-title>
-            <div class="header-container">
-                <h2>Historial Clínico</h2>
-                <button mat-raised-button color="primary" routerLink="/dashboard/medical-records/new">
-                    <mat-icon>add</mat-icon>
-                    Nuevo Registro
-                </button>
-            </div>
-        </mat-card-title>
-    </mat-card-header>
+    <div class="header-container">
+        <h2>Historial Clínico</h2>
+        <button mat-raised-button color="primary" routerLink="/dashboard/medical-records/new">
+            <mat-icon>add</mat-icon>
+            Nuevo Registro
+        </button>
+    </div>
 
     <mat-card-content>
-        <!-- Loading spinner -->
-        @if (loading) {
-        <div class="loading-container">
-            <mat-spinner diameter="50"></mat-spinner>
+        <!-- Search and Selection State -->
+        @if (!selectedPetId) {
+        <div class="search-container">
+            <!-- Step 1: Client Search -->
+            @if (!selectedClient) {
+            <mat-form-field appearance="outline" class="search-field">
+                <mat-label>Buscar Cliente (DNI, Nombre, Apellido)</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input type="text" matInput [formControl]="clientSearchControl" [matAutocomplete]="auto">
+
+                @if (loadingSearch) {
+                <mat-spinner matSuffix diameter="20"></mat-spinner>
+                }
+
+                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selectClient($event.option.value)">
+                    @for (client of searchResults; track client.id) {
+                    <mat-option [value]="client">
+                        <div class="search-result">
+                            <span class="name">{{ client.firstName }} {{ client.lastName }}</span>
+                            <span class="dni">{{ client.identificationNumber || 'Sin DNI' }}</span>
+                        </div>
+                    </mat-option>
+                    }
+                </mat-autocomplete>
+            </mat-form-field>
+            }
+
+            <!-- Step 2: Pet Selection -->
+            @if (selectedClient) {
+            <div class="selected-client-info">
+                <div class="client-header">
+                    <h3>Cliente Seleccionado: {{ selectedClient.firstName }} {{ selectedClient.lastName }}</h3>
+                    <button mat-button color="warn" (click)="clearSelection()">Cambiar Cliente</button>
+                </div>
+
+                <div class="pets-grid">
+                    @if (clientPets$ | async; as pets) {
+                    @if (pets.length === 0) {
+                    <p class="no-pets-msg">Este cliente no tiene mascotas registradas.</p>
+                    }
+                    @for (pet of pets; track pet.id) {
+                    <mat-card class="pet-card" (click)="selectPet(pet.id!)">
+                        <mat-card-header>
+                            <div mat-card-avatar class="pet-avatar">
+                                <mat-icon>pets</mat-icon>
+                            </div>
+                            <mat-card-title>{{ pet.name }}</mat-card-title>
+                            <mat-card-subtitle>{{ pet.species }} - {{ pet.breed }}</mat-card-subtitle>
+                        </mat-card-header>
+                    </mat-card>
+                    }
+                    } @else {
+                    <mat-spinner diameter="30"></mat-spinner>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Error / Empty search state -->
+        @if (selectedPetId && !loading && dataSource.data.length === 0) {
+        <div class="no-data">
+            <mat-icon>medical_information</mat-icon>
+            <p>La mascota seleccionada no posee historial clínico.</p>
+            <button mat-raised-button color="primary" routerLink="/dashboard/medical-records/new">
+                Crear primer registro
+            </button>
+            <br><br>
+            <button mat-button (click)="clearSelection()">Volver a buscar</button>
         </div>
         }
 
         <!-- Table -->
-        @if (!loading) {
+        @if (selectedPetId && !loading && dataSource.data.length > 0) {
+        <div class="active-pet-header">
+            <h3>Mostrando historial de: {{ getPetName(selectedPetId) }}</h3>
+            <button mat-button (click)="clearSelection()">Buscar otra mascota</button>
+        </div>
+
         <div class="table-container">
             <table mat-table [dataSource]="dataSource" matSort class="records-table">
 
@@ -106,19 +173,6 @@
 
                 <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="record-row"></tr>
-
-                <!-- No data row -->
-                <tr class="mat-row" *matNoDataRow>
-                    <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-                        <div class="no-data">
-                            <mat-icon>medical_information</mat-icon>
-                            <p>No hay registros médicos</p>
-                            <button mat-raised-button color="primary" routerLink="/dashboard/medical-records/new">
-                                Crear primer registro
-                            </button>
-                        </div>
-                    </td>
-                </tr>
             </table>
         </div>
 

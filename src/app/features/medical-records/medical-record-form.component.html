@@ -44,7 +44,7 @@
 
                     <mat-form-field appearance="outline" class="form-field">
                         <mat-label>Mascota</mat-label>
-                        <mat-select formControlName="petId" [disabled]="!recordForm.get('clientId')?.value">
+                        <mat-select formControlName="petId">
                             @if (filteredPets.length === 0 && recordForm.get('clientId')?.value) {
                             <mat-option disabled>Este cliente no tiene mascotas</mat-option>
                             }
@@ -94,24 +94,12 @@
 
                 <div class="form-row">
                     <mat-form-field appearance="outline" class="form-field full-width">
-                        <mat-label>Diagnóstico</mat-label>
-                        <textarea matInput formControlName="diagnosis" rows="3"
-                           ></textarea>
+                        <mat-label>Diagnóstico y Tratamiento</mat-label>
+                        <textarea matInput formControlName="diagnosisAndTreatment" rows="4"></textarea>
                         <mat-icon matPrefix>description</mat-icon>
-                        @if (recordForm.get('diagnosis')?.invalid && recordForm.get('diagnosis')?.touched) {
-                        <mat-error>{{ getErrorMessage('diagnosis') }}</mat-error>
-                        }
-                    </mat-form-field>
-                </div>
-
-                <div class="form-row">
-                    <mat-form-field appearance="outline" class="form-field full-width">
-                        <mat-label>Tratamiento</mat-label>
-                        <textarea matInput formControlName="treatment" rows="3"
-                           ></textarea>
-                        <mat-icon matPrefix>healing</mat-icon>
-                        @if (recordForm.get('treatment')?.invalid && recordForm.get('treatment')?.touched) {
-                        <mat-error>{{ getErrorMessage('treatment') }}</mat-error>
+                        @if (recordForm.get('diagnosisAndTreatment')?.invalid &&
+                        recordForm.get('diagnosisAndTreatment')?.touched) {
+                        <mat-error>{{ getErrorMessage('diagnosisAndTreatment') }}</mat-error>
                         }
                     </mat-form-field>
                 </div>
@@ -119,11 +107,107 @@
                 <div class="form-row">
                     <mat-form-field appearance="outline" class="form-field full-width">
                         <mat-label>Notas Adicionales (opcional)</mat-label>
-                        <textarea matInput formControlName="notes" rows="2"
-                           ></textarea>
+                        <textarea matInput formControlName="notes" rows="2"></textarea>
                         <mat-icon matPrefix>note</mat-icon>
                     </mat-form-field>
                 </div>
+            </div>
+
+            <!-- Vaccines -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>Vacunas</h3>
+                    <button mat-raised-button type="button" color="accent" (click)="addVaccine()">
+                        <mat-icon>add</mat-icon>
+                        Agregar Vacuna
+                    </button>
+                </div>
+
+                @if (vaccines.length === 0) {
+                <p class="no-prescriptions">Vaya, no hay vacunas en este registro. Haga clic en "Agregar Vacuna" para
+                    añadir una.</p>
+                }
+
+                @for (vaccine of vaccines.controls; track $index; let i = $index) {
+                <div class="prescription-card" [formGroup]="$any(vaccine)">
+                    <div class="prescription-header">
+                        <h4>Vacuna {{ i + 1 }}</h4>
+                        <button mat-icon-button type="button" color="warn" (click)="removeVaccine(i)"
+                            matTooltip="Eliminar">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="form-field">
+                            <mat-label>Nombre de vacuna</mat-label>
+                            <input matInput formControlName="name">
+                            <mat-icon matPrefix>vaccines</mat-icon>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="form-field">
+                            <mat-label>Fecha de vencimiento</mat-label>
+                            <input matInput [matDatepicker]="vacPicker" formControlName="expirationDate">
+                            <mat-datepicker-toggle matIconSuffix [for]="vacPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #vacPicker></mat-datepicker>
+                            <mat-icon matPrefix>event</mat-icon>
+                        </mat-form-field>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Deworming -->
+            <div class="form-section">
+                <div class="section-header">
+                    <h3>Desparasitaciones</h3>
+                    <button mat-raised-button type="button" color="accent" (click)="addDeworming()">
+                        <mat-icon>add</mat-icon>
+                        Agregar Desparasitante
+                    </button>
+                </div>
+
+                @if (deworming.length === 0) {
+                <p class="no-prescriptions">Vaya, no hay desparasitantes en este registro. Haga clic para añadir uno.
+                </p>
+                }
+
+                @for (deworm of deworming.controls; track $index; let i = $index) {
+                <div class="prescription-card" [formGroup]="$any(deworm)">
+                    <div class="prescription-header">
+                        <h4>Desparasitante {{ i + 1 }}</h4>
+                        <button mat-icon-button type="button" color="warn" (click)="removeDeworming(i)"
+                            matTooltip="Eliminar">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="form-field">
+                            <mat-label>Nombre del producto</mat-label>
+                            <input matInput formControlName="name">
+                            <mat-icon matPrefix>medication</mat-icon>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="form-field">
+                            <mat-label>Tipo</mat-label>
+                            <mat-select formControlName="type">
+                                <mat-option value="internal">Interno</mat-option>
+                                <mat-option value="external">Externo</mat-option>
+                                <mat-option value="both">Ambos</mat-option>
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="form-field">
+                            <mat-label>Fecha de vencimiento</mat-label>
+                            <input matInput [matDatepicker]="dewPicker" formControlName="expirationDate">
+                            <mat-datepicker-toggle matIconSuffix [for]="dewPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #dewPicker></mat-datepicker>
+                            <mat-icon matPrefix>event</mat-icon>
+                        </mat-form-field>
+                    </div>
+                </div>
+                }
             </div>
 
             <!-- Prescriptions -->

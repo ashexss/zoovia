@@ -3,22 +3,24 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    margin-bottom: 1rem;
+    padding: 24px 24px 0 24px;
+    box-sizing: border-box;
 
     h2 {
         margin: 0;
         font-size: 1.5rem;
         font-weight: 500;
-        flex: 1; // Allow h2 to grow and push button to the right
+        color: #00695c;
     }
 }
 
 .search-container {
-    margin-bottom: 1.5rem;
+    margin: 1.5rem 0 2rem;
 
     .search-field {
         width: 100%;
-        max-width: 500px;
+        max-width: 320px;
+        font-size: 0.9rem;
     }
 }
 

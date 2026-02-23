@@ -56,10 +56,9 @@ export class MedicalRecordService {
                     return of([]);
                 }
 
-                const recordsCol = collection(this.firestore, 'medicalRecords');
+                const recordsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/medicalRecords`);
                 const q = query(
                     recordsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId),
                     orderBy('date', 'desc')
                 );
 
@@ -104,17 +103,23 @@ export class MedicalRecordService {
                     return of([]); // Return an observable that immediately emits an empty array
                 }
 
-                const recordsCol = collection(this.firestore, 'medicalRecords');
+                const recordsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/medicalRecords`);
                 const q = query(
                     recordsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId),
                     where('petId', '==', petId),
                     orderBy('date', 'desc')
                 );
 
-                return collectionData(q, { idField: 'id' }) as Observable<MedicalRecord[]>;
+                return runInInjectionContext(this.injector, () => collectionData(q, { idField: 'id' })) as Observable<MedicalRecord[]>;
             })
         );
+    }
+
+    /**
+     * Alias for consistency with new queries
+     */
+    getMedicalRecordsByPet(petId: string): Observable<MedicalRecord[]> {
+        return this.getRecordsByPet(petId);
     }
 
     /**
@@ -128,10 +133,9 @@ export class MedicalRecordService {
                     return of([]); // Return an observable that immediately emits an empty array
                 }
 
-                const recordsCol = collection(this.firestore, 'medicalRecords');
+                const recordsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/medicalRecords`);
                 const q = query(
                     recordsCol,
-                    where('veterinaryId', '==', currentUser.veterinaryId),
                     where('clientId', '==', clientId),
                     orderBy('date', 'desc')
                 );
@@ -145,8 +149,14 @@ export class MedicalRecordService {
      * Get a single medical record by ID
      */
     getRecordById(id: string): Observable<MedicalRecord | undefined> {
-        const recordDoc = doc(this.firestore, 'medicalRecords', id);
-        return docData(recordDoc, { idField: 'id' }) as Observable<MedicalRecord | undefined>;
+        return this.authService.currentUser$.pipe(
+            take(1),
+            switchMap(currentUser => {
+                if (!currentUser?.veterinaryId) return of(undefined);
+                const recordDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/medicalRecords`, id);
+                return docData(recordDoc, { idField: 'id' }) as Observable<MedicalRecord | undefined>;
+            })
+        );
     }
 
     /**
@@ -174,15 +184,16 @@ export class MedicalRecordService {
             date: recordData.date || Timestamp.now(),
             type: recordData.type || 'consultation',
             veterinarianId: currentUser.id,
-            diagnosis: recordData.diagnosis || '',
-            treatment: recordData.treatment || '',
+            diagnosisAndTreatment: recordData.diagnosisAndTreatment || '',
             notes: recordData.notes || '',
+            vaccines: recordData.vaccines || [],
+            deworming: recordData.deworming || [],
             prescriptions: recordData.prescriptions || [],
             attachments: recordData.attachments || [],
             createdAt: Timestamp.now()
         };
 
-        const recordsCol = collection(this.firestore, 'medicalRecords');
+        const recordsCol = collection(this.firestore, `veterinaries/${currentUser.veterinaryId}/medicalRecords`);
         const docRef = await addDoc(recordsCol, newRecord);
 
         // Invalidate cache
@@ -195,7 +206,10 @@ export class MedicalRecordService {
      * Update an existing medical record
      */
     async updateRecord(id: string, recordData: Partial<MedicalRecord>): Promise<void> {
-        const recordDoc = doc(this.firestore, 'medicalRecords', id);
+        const currentUser = await this.authService.getUserProfile();
+        if (!currentUser?.veterinaryId) throw new Error('User must belong to a veterinary');
+
+        const recordDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/medicalRecords`, id);
 
         const updateData = { ...recordData };
 
@@ -214,7 +228,10 @@ export class MedicalRecordService {
      * Delete a medical record
      */
     async deleteRecord(id: string): Promise<void> {
-        const recordDoc = doc(this.firestore, 'medicalRecords', id);
+        const currentUser = await this.authService.getUserProfile();
+        if (!currentUser?.veterinaryId) throw new Error('User must belong to a veterinary');
+
+        const recordDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/medicalRecords`, id);
         await deleteDoc(recordDoc);
 
         // Invalidate cache

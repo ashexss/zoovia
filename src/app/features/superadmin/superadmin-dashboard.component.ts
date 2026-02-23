@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -32,6 +32,7 @@ export class SuperadminDashboardComponent implements OnInit {
     private superadminService = inject(SuperadminService);
     private fb = inject(FormBuilder);
     private snackBar = inject(MatSnackBar);
+    private cdr = inject(ChangeDetectorRef);
 
     vets: Veterinary[] = [];
     selectedVet: Veterinary | null = null;
@@ -78,6 +79,7 @@ export class SuperadminDashboardComponent implements OnInit {
             this.snackBar.open('Error al cargar veterinarias', 'Cerrar', { duration: 4000 });
         } finally {
             this.loading = false;
+            this.cdr.detectChanges();
         }
     }
 

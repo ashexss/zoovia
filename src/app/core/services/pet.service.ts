@@ -131,7 +131,7 @@ export class PetService {
                     petsCol
                 );
 
-                return collectionData(q, { idField: 'id' }).pipe(
+                return runInInjectionContext(this.injector, () => collectionData(q, { idField: 'id' })).pipe(
                     map(pets => {
                         const filtered = (pets as Pet[]).filter(pet => {
                             const term = searchTerm.toLowerCase();
@@ -159,7 +159,11 @@ export class PetService {
                     return of(undefined);
                 }
                 const petDoc = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/pets`, id);
-                return runInInjectionContext(this.injector, () => docData(petDoc, { idField: 'id' })) as Observable<Pet | undefined>;
+                return (runInInjectionContext(this.injector, () => docData(petDoc, { idField: 'id' })) as Observable<Pet | undefined>).pipe(
+                    take(1),
+                    timeout(2500),
+                    catchError(() => of(undefined))
+                );
             })
         );
     }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -70,12 +70,6 @@ import { take, catchError, debounceTime, distinctUntilChanged } from 'rxjs/opera
               </mat-option>
             </mat-autocomplete>
           </mat-form-field>
-
-          <!-- Clock Widget -->
-          <div class="clock-widget">
-            <div class="time">{{ currentTime | date:'HH:mm':'':'es-AR' }}</div>
-            <div class="date">{{ currentTime | date:'EEEE, d MMMM':'':'es-AR' }}</div>
-          </div>
         </div>
       </div>
 
@@ -98,50 +92,13 @@ import { take, catchError, debounceTime, distinctUntilChanged } from 'rxjs/opera
             <button *ngIf="appointmentsEnabled" mat-raised-button color="accent" (click)="navigateTo('/dashboard/appointments/new')">
               <mat-icon>event_available</mat-icon> Nuevo Turno
             </button>
+            <button mat-raised-button color="accent" (click)="navigateTo('/dashboard/sales/new')" matTooltip="Próximamente">
+              <mat-icon>storefront</mat-icon> Nueva Venta
+            </button>
           </div>
         </mat-card-content>
       </mat-card>
-
-      <!-- Statistics Row -->
-      <div class="stats-grid">
-        <mat-card class="stat-card clients">
-          <mat-card-content>
-            <div class="stat-icon"><mat-icon>people</mat-icon></div>
-            <div class="stat-info">
-              <h3>Clientes</h3>
-              <p class="stat-number" *ngIf="!loadingStats">{{ clientsCount }}</p>
-              <mat-spinner diameter="30" *ngIf="loadingStats"></mat-spinner>
-              <p class="stat-label">Registrados</p>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card records">
-          <mat-card-content>
-            <div class="stat-icon"><mat-icon>medical_services</mat-icon></div>
-            <div class="stat-info">
-              <h3>Historiales</h3>
-              <p class="stat-number" *ngIf="!loadingStats">{{ recordsCount }}</p>
-              <mat-spinner diameter="30" *ngIf="loadingStats"></mat-spinner>
-              <p class="stat-label">Consultas totales</p>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card loyalty" *ngIf="loyaltyEnabled">
-          <mat-card-content>
-            <div class="stat-icon"><mat-icon>stars</mat-icon></div>
-            <div class="stat-info">
-              <h3>Puntos emitidos</h3>
-              <p class="stat-number" *ngIf="!loadingStats">{{ totalLoyaltyPoints | number }}</p>
-              <mat-spinner diameter="30" *ngIf="loadingStats"></mat-spinner>
-              <p class="stat-label">En programa</p>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-
-        <!-- Center Column (Appointments & Logs) -->
+      <!-- Center Column (Appointments & Logs) -->
         <div class="center-column">
           
           <!-- Today's Appointments -->
@@ -191,7 +148,7 @@ import { take, catchError, debounceTime, distinctUntilChanged } from 'rxjs/opera
                 <div class="appt-list">
                   <div *ngFor="let record of yesterdayRecords" class="appt-row record-row" (click)="navigateTo('/dashboard/clients/' + record.clientId)">
                     <div class="appt-info">
-                      <span class="appt-pet">{{ record.diagnosis || 'Atención general' }}</span>
+                      <span class="appt-pet">{{ record.diagnosisAndTreatment || 'Atención general' }}</span>
                       <span class="appt-client">{{ record.date.toDate() | date:'shortTime' }}</span>
                     </div>
                     <mat-icon class="go-icon">chevron_right</mat-icon>
@@ -221,14 +178,8 @@ import { take, catchError, debounceTime, distinctUntilChanged } from 'rxjs/opera
     .search-field { width: 320px; }
     .search-result-item { display: flex; justify-content: space-between; align-items: center; width: 100%; }
     .client-name { font-weight: 500; }
+    .client-name { font-weight: 500; }
     .client-dni { font-size: 12px; color: #7f8c8d; }
-
-    .clock-widget {
-      text-align: right; background: #f8f9fa; padding: 12px 20px; border-radius: 12px;
-      border: 1px solid #e9ecef; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-    }
-    .clock-widget .time { font-size: 1.5rem; font-weight: 700; color: #2c3e50; line-height: 1; }
-    .clock-widget .date { font-size: 0.85rem; color: #7f8c8d; margin-top: 4px; text-transform: capitalize; }
 
     /* Widgets Row */
     .widgets-row {
@@ -246,28 +197,6 @@ import { take, catchError, debounceTime, distinctUntilChanged } from 'rxjs/opera
       mat-icon { font-size: 36px; width: 36px; height: 36px; }
     }
 
-
-
-    /* Stats Grid */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 32px; }
-    .stat-card {
-      transition: all 0.3s ease; cursor: default;
-      &:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,.15); }
-      mat-card-content { display: flex; align-items: center; gap: 20px; padding: 24px !important; }
-      .stat-icon {
-        background: linear-gradient(135deg, #00897b, #00695c); border-radius: 16px; padding: 16px;
-        display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,137,123,.3);
-        mat-icon { color: white; font-size: 36px; width: 36px; height: 36px; }
-      }
-      &.records .stat-icon { background: linear-gradient(135deg, #1976d2, #0d47a1); box-shadow: 0 4px 12px rgba(25,118,210,.3); }
-      &.loyalty .stat-icon { background: linear-gradient(135deg, #ff9800, #ef6c00); box-shadow: 0 4px 12px rgba(255,152,0,.3); }
-      .stat-info {
-        flex: 1; min-height: 60px; display: flex; flex-direction: column; justify-content: center;
-        h3 { margin: 0 0 4px; font-size: 13px; color: #999; font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
-        .stat-number { margin: 0; font-size: 32px; font-weight: 700; color: #333; line-height: 1; }
-        .stat-label { margin: 4px 0 0; font-size: 13px; color: #666; }
-      }
-    }
 
     /* Quick Actions */
     .quick-actions-card {
@@ -312,26 +241,15 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   private apptService = inject(AppointmentService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   // Widget Toggles
   loyaltyEnabled = false;
   appointmentsEnabled = false;
-
-  // Real-time Clock
-  currentTime = new Date();
-  private timerInfo: any;
-
   // Search
   searchControl = new FormControl('');
   searchResults: Client[] = [];
   loadingSearch = false;
-
-  // Stats
-  loadingStats = true;
-  clientsCount = 0;
-  recordsCount = 0;
-  totalLoyaltyPoints = 0;
-
   // Appointments
   todayAppointments: Appointment[] = [];
   loadingAppts = true;
@@ -341,7 +259,6 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   loadingRecords = true;
 
   ngOnInit() {
-    this.timerInfo = setInterval(() => { this.currentTime = new Date(); }, 60000); // update every minute
     this.setupSearch();
 
     this.vetService.getCurrentVeterinary().pipe(take(1)).subscribe(vet => {
@@ -349,15 +266,14 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       this.appointmentsEnabled = !!vet.subscription?.modules?.appointments;
       this.loyaltyEnabled = !!vet.loyaltyProgram?.enabled;
 
-      this.loadStatistics();
       this.loadYesterdayRecords();
       if (this.appointmentsEnabled) this.loadTodayAppointments(vet.id);
+
+      this.cdr.detectChanges();
     });
   }
 
-  ngOnDestroy() {
-    if (this.timerInfo) clearInterval(this.timerInfo);
-  }
+  ngOnDestroy() { }
 
   private setupSearch() {
     this.searchControl.valueChanges.pipe(
@@ -375,6 +291,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
       ).subscribe((results: Client[] | undefined) => {
         this.searchResults = (results || []).slice(0, 5);
         this.loadingSearch = false;
+        this.cdr.detectChanges();
       });
     });
   }
@@ -384,26 +301,11 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
     this.navigateTo('/dashboard/clients/' + client.id);
   }
 
-  private loadStatistics() {
-    this.loadingStats = true;
-    combineLatest([
-      this.clientService.getClients().pipe(catchError(() => of([]))),
-      this.recordService.getMedicalRecords().pipe(catchError(() => of([])))
-    ]).pipe(take(1)).subscribe(([clients, records]: [Client[] | undefined, MedicalRecord[] | undefined]) => {
-      this.clientsCount = (clients || []).length;
-      if (this.loyaltyEnabled) {
-        this.totalLoyaltyPoints = (clients || []).reduce((sum: number, c: Client) => sum + (c.loyaltyPoints ?? 0), 0);
-      }
-      this.recordsCount = (records || []).length;
-      this.loadingStats = false;
-    });
-  }
-
   private loadTodayAppointments(vetId: string) {
     this.loadingAppts = true;
     this.apptService.getTodayAppointments(vetId).subscribe({
-      next: appts => { this.todayAppointments = appts; this.loadingAppts = false; },
-      error: () => { this.loadingAppts = false; }
+      next: appts => { this.todayAppointments = appts; this.loadingAppts = false; this.cdr.detectChanges(); },
+      error: () => { this.loadingAppts = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -421,6 +323,7 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
         return d < now; // Any old record is considered past (mocking for UX)
       }).slice(0, 3);
       this.loadingRecords = false;
+      this.cdr.detectChanges();
     });
   }
 

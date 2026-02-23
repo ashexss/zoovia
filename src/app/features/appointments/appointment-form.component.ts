@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -47,6 +47,7 @@ export class AppointmentFormComponent implements OnInit {
     private petService = inject(PetService);
     private appointmentService = inject(AppointmentService);
     private snackBar = inject(MatSnackBar);
+    private cdr = inject(ChangeDetectorRef);
 
     form!: FormGroup;
     saving = false;
@@ -81,6 +82,9 @@ export class AppointmentFormComponent implements OnInit {
             appointmentDate: [null],
             scheduledTime: ['']
         });
+
+        // Initialize pet selector as disabled until a client is chosen
+        this.form.get('petId')?.disable();
 
         this.authService.currentUser$.subscribe(user => {
             this.userId = user?.id ?? '';
@@ -147,9 +151,11 @@ export class AppointmentFormComponent implements OnInit {
 
     loadPets(clientId: string) {
         this.loadingPets = true;
+        this.form.get('petId')?.disable();
         this.petService.getPetsByClient(clientId).subscribe(pets => {
             this.clientPets = pets;
             this.loadingPets = false;
+            this.form.get('petId')?.enable();
         });
     }
 
@@ -195,7 +201,7 @@ export class AppointmentFormComponent implements OnInit {
                     petName: pet.name,
                     petSpecies: pet.species,
                     reason: v.reason,
-                    notes: v.notes || undefined,
+                    notes: v.notes || '',
                     priority: v.priority,
                     createdBy: this.userId
                 });
@@ -212,7 +218,7 @@ export class AppointmentFormComponent implements OnInit {
                     date: this.appointmentService.toDateString(date),
                     scheduledTime: v.scheduledTime,
                     reason: v.reason,
-                    notes: v.notes || undefined,
+                    notes: v.notes || '',
                     isWalkIn: false,
                     priority: v.priority,
                     status: 'scheduled',
@@ -226,6 +232,7 @@ export class AppointmentFormComponent implements OnInit {
             this.snackBar.open('Error al guardar el turno', 'Cerrar', { duration: 3000 });
         } finally {
             this.saving = false;
+            this.cdr.detectChanges();
         }
     }
 

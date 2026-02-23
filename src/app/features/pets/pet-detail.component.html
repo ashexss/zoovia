@@ -102,9 +102,18 @@
             <div class="tab-content">
                 <div class="section-header">
                     <h3>Registro de Visitas Médicas</h3>
+                    @if (hasActiveAppointment) {
                     <button mat-raised-button color="primary" (click)="newConsultation()">
                         <mat-icon>add</mat-icon> Nueva Consulta
                     </button>
+                    } @else {
+                    <div matTooltip="Debes iniciar la atención de su turno en la agenda para registrar una consulta"
+                        matTooltipPosition="above">
+                        <button mat-raised-button color="primary" disabled>
+                            <mat-icon>add</mat-icon> Nueva Consulta
+                        </button>
+                    </div>
+                    }
                 </div>
 
                 @if (loadingRecords) {
@@ -122,22 +131,48 @@
 
                 <div class="records-list">
                     @for (record of consultations; track record.id) {
-                    <mat-card class="record-card" (click)="viewRecord(record.id)">
+                    <mat-card class="record-card">
                         <mat-card-content>
                             <div class="record-header">
                                 <div class="record-date">
                                     <mat-icon>event</mat-icon>
                                     {{ formatDate(record.date) }}
                                 </div>
-                                <span class="badge">{{ record.type | titlecase }}</span>
+                                <span class="badge" [ngClass]="record.type">{{ record.type === 'consultation' ?
+                                    'Consulta' : (record.type === 'surgery' ? 'Cirugía' : 'Control') }}</span>
                             </div>
                             <div class="record-body">
-                                <strong>Diagnóstico:</strong>
-                                <p>{{ record.diagnosis || 'Sin diagnóstico registrado' }}</p>
-
-                                @if(record.treatment) {
-                                <strong>Tratamiento:</strong>
-                                <p>{{ record.treatment }}</p>
+                                <strong>Diagnóstico / Tratam.:</strong>
+                                <p>{{ record.diagnosisAndTreatment }}</p>
+                                @if (record.notes) {
+                                <strong>Notas:</strong>
+                                <p>{{ record.notes }}</p>
+                                }
+                                @if (record.prescriptions && record.prescriptions.length > 0) {
+                                <strong>Recetas:</strong>
+                                <ul>
+                                    @for (p of record.prescriptions; track p.medication) {
+                                    <li>{{ p.medication }} ({{ p.dosage }} - {{ p.frequency }} - {{ p.duration }})</li>
+                                    }
+                                </ul>
+                                }
+                                @if (record.vaccines && record.vaccines.length > 0) {
+                                <strong>Vacunas:</strong>
+                                <ul>
+                                    @for (vac of record.vaccines; track vac.name) {
+                                    <li>{{ vac.name }} (Vence: {{ formatDate(vac.expirationDate) }})</li>
+                                    }
+                                </ul>
+                                }
+                                @if (record.deworming && record.deworming.length > 0) {
+                                <strong>Desparasitación:</strong>
+                                <ul>
+                                    @for (dew of record.deworming; track dew.name) {
+                                    <li>{{ dew.name }} ({{ dew.type === 'both' ? 'Interno y Externo' : (dew.type ===
+                                        'internal' ? 'Interno' : 'Externo') }}) - Vence: {{
+                                        formatDate(dew.expirationDate) }}</li>
+                                    }
+                                </ul>
                                 }
                             </div>
                         </mat-card-content>
@@ -152,9 +187,18 @@
             <div class="tab-content">
                 <div class="section-header">
                     <h3>Registro de Vacunación</h3>
+                    @if (hasActiveAppointment) {
                     <button mat-raised-button color="primary" (click)="newConsultation()">
                         <mat-icon>add</mat-icon> Nueva Vacuna
                     </button>
+                    } @else {
+                    <div matTooltip="Debes iniciar la atención de su turno en la agenda para registrar una vacuna"
+                        matTooltipPosition="above">
+                        <button mat-raised-button color="primary" disabled>
+                            <mat-icon>add</mat-icon> Nueva Vacuna
+                        </button>
+                    </div>
+                    }
                 </div>
 
                 @if (!loadingRecords && vaccinations.length === 0) {
@@ -166,15 +210,24 @@
 
                 <div class="records-list">
                     @for (record of vaccinations; track record.id) {
-                    <mat-card class="record-card" (click)="viewRecord(record.id)">
+                    <mat-card class="record-card">
                         <mat-card-content>
                             <div class="record-header">
                                 <div class="record-date"><mat-icon>event</mat-icon>{{ formatDate(record.date) }}</div>
                                 <span class="badge">Vacuna</span>
                             </div>
                             <div class="record-body">
+                                @if (record.vaccines && record.vaccines.length > 0) {
+                                <ul>
+                                    @for (vac of record.vaccines; track vac.name) {
+                                    <li><strong>{{ vac.name }}</strong> (Vence: {{ formatDate(vac.expirationDate) }})
+                                    </li>
+                                    }
+                                </ul>
+                                } @else {
                                 <strong>Aplicación:</strong>
-                                <p>{{ record.treatment || record.notes || 'Vacuna aplicada' }}</p>
+                                <p>{{ record.diagnosisAndTreatment || record.notes || 'Vacuna aplicada' }}</p>
+                                }
                             </div>
                         </mat-card-content>
                     </mat-card>
@@ -188,9 +241,18 @@
             <div class="tab-content">
                 <div class="section-header">
                     <h3>Registro de Desparasitación</h3>
+                    @if (hasActiveAppointment) {
                     <button mat-raised-button color="primary" (click)="newConsultation()">
                         <mat-icon>add</mat-icon> Nueva Dosis
                     </button>
+                    } @else {
+                    <div matTooltip="Debes iniciar la atención de su turno en la agenda para registrar una desparasitación"
+                        matTooltipPosition="above">
+                        <button mat-raised-button color="primary" disabled>
+                            <mat-icon>add</mat-icon> Nueva Dosis
+                        </button>
+                    </div>
+                    }
                 </div>
 
                 @if (!loadingRecords && dewormings.length === 0) {
@@ -202,15 +264,28 @@
 
                 <div class="records-list">
                     @for (record of dewormings; track record.id) {
-                    <mat-card class="record-card" (click)="viewRecord(record.id)">
+                    <mat-card class="record-card">
                         <mat-card-content>
                             <div class="record-header">
                                 <div class="record-date"><mat-icon>event</mat-icon>{{ formatDate(record.date) }}</div>
                                 <span class="badge">Parasitario</span>
                             </div>
                             <div class="record-body">
+                                @if (record.deworming && record.deworming.length > 0) {
+                                <ul>
+                                    @for (dew of record.deworming; track dew.name) {
+                                    <li>
+                                        <strong>{{ dew.name }}</strong>
+                                        <em>({{ dew.type === 'both' ? 'Interno y Externo' : (dew.type === 'internal' ?
+                                            'Interno' : 'Externo') }})</em>
+                                        - Vence: {{ formatDate(dew.expirationDate) }}
+                                    </li>
+                                    }
+                                </ul>
+                                } @else {
                                 <strong>Producto Administrado:</strong>
-                                <p>{{ record.treatment || record.notes || 'Producto administrado' }}</p>
+                                <p>{{ record.diagnosisAndTreatment || record.notes || 'Producto administrado' }}</p>
+                                }
                             </div>
                         </mat-card-content>
                     </mat-card>
@@ -224,9 +299,18 @@
             <div class="tab-content">
                 <div class="section-header">
                     <h3>Tratamientos Prolongados</h3>
+                    @if (hasActiveAppointment) {
                     <button mat-raised-button color="primary" (click)="newConsultation()">
                         <mat-icon>add</mat-icon> Nuevo Tratamiento
                     </button>
+                    } @else {
+                    <div matTooltip="Debes iniciar la atención de su turno en la agenda para registrar un tratamiento"
+                        matTooltipPosition="above">
+                        <button mat-raised-button color="primary" disabled>
+                            <mat-icon>add</mat-icon> Nuevo Tratamiento
+                        </button>
+                    </div>
+                    }
                 </div>
 
                 @if (!loadingRecords && treatments.length === 0) {
@@ -238,15 +322,23 @@
 
                 <div class="records-list">
                     @for (record of treatments; track record.id) {
-                    <mat-card class="record-card" (click)="viewRecord(record.id)">
+                    <mat-card class="record-card">
                         <mat-card-content>
                             <div class="record-header">
                                 <div class="record-date"><mat-icon>event</mat-icon>{{ formatDate(record.date) }}</div>
                                 <span class="badge">Tratamiento</span>
                             </div>
                             <div class="record-body">
-                                <strong>Indicación:</strong>
-                                <p>{{ record.treatment || record.diagnosis || record.notes }}</p>
+                                <strong>Indicación general:</strong>
+                                <p>{{ record.diagnosisAndTreatment || record.notes }}</p>
+                                @if (record.prescriptions && record.prescriptions.length > 0) {
+                                <strong>Recetado:</strong>
+                                <ul>
+                                    @for (p of record.prescriptions; track p.medication) {
+                                    <li>{{ p.medication }} ({{ p.dosage }} - {{ p.frequency }} - {{ p.duration }})</li>
+                                    }
+                                </ul>
+                                }
                             </div>
                         </mat-card-content>
                     </mat-card>

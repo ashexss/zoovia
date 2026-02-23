@@ -14,7 +14,10 @@ import { PetService } from '../../core/services/pet.service';
 import { ClientService } from '../../core/services/client.service';
 import { MedicalRecordService } from '../../core/services/medical-record.service';
 import { SubscriptionService } from '../../core/services/subscription.service';
+import { AppointmentService } from '../../core/services/appointment.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { Pet, Client, MedicalRecord } from '../../core/models';
+import { take } from 'rxjs';
 
 @Component({
     selector: 'app-pet-detail',
@@ -39,6 +42,8 @@ export class PetDetailComponent implements OnInit {
     private petService = inject(PetService);
     private clientService = inject(ClientService);
     private medicalRecordService = inject(MedicalRecordService);
+    private appointmentService = inject(AppointmentService);
+    private authService = inject(AuthService);
     private cdr = inject(ChangeDetectorRef);
     private snackBar = inject(MatSnackBar);
 
@@ -55,6 +60,10 @@ export class PetDetailComponent implements OnInit {
 
     loading = false;
     loadingRecords = false;
+
+    // Appointment Context
+    hasActiveAppointment = false;
+    activeAppointmentId: string | null = null;
 
     ngOnInit(): void {
         this.petId = this.route.snapshot.paramMap.get('id');
@@ -74,6 +83,7 @@ export class PetDetailComponent implements OnInit {
                 this.loading = false;
                 this.cdr.detectChanges();
                 this.loadMedicalRecords(id);
+                this.checkActiveAppointments(id);
             },
             error: (error) => {
                 console.error('[PetDetail] Error loading pet:', error);
@@ -99,11 +109,9 @@ export class PetDetailComponent implements OnInit {
 
                 // Categorize records for the different tabs
                 this.consultations = records.filter(r => r.type === 'consultation' || r.type === 'checkup' || r.type === 'surgery');
-                this.vaccinations = records.filter(r => r.type === 'vaccination');
-                // Note: Deworming isn't a strict 'MedicalRecordType' built-in yet but often recorded under 'treatment' or a specific type, 
-                // we'll filter by a planned 'deworming' type or 'treatment' with specific notes if you expand the schema later.
-                this.dewormings = records.filter(r => (r as any).type === 'deworming');
-                this.treatments = records.filter(r => r.type === 'treatment');
+                this.vaccinations = records.filter(r => (r.vaccines && r.vaccines.length > 0));
+                this.dewormings = records.filter(r => (r.deworming && r.deworming.length > 0));
+                this.treatments = records.filter(r => (r.prescriptions && r.prescriptions.length > 0));
 
                 this.loadingRecords = false;
                 this.cdr.detectChanges();
@@ -161,7 +169,29 @@ export class PetDetailComponent implements OnInit {
     }
 
     newConsultation(): void {
-        this.router.navigate(['/dashboard/records/new'], { queryParams: { petId: this.petId, clientId: this.pet?.clientId } });
+        this.router.navigate(['/dashboard/medical-records/new'], {
+            queryParams: {
+                petId: this.petId,
+                clientId: this.pet?.clientId,
+                appointmentId: this.activeAppointmentId
+            }
+        });
+    }
+
+    private checkActiveAppointments(petId: string): void {
+        this.authService.currentUser$.pipe(take(1)).subscribe(user => {
+            if (!user?.veterinaryId) return;
+
+            this.appointmentService.getTodayAppointments(user.veterinaryId).pipe(take(1)).subscribe({
+                next: (appointments: any[]) => { // Using any to avoid importing Appointment model if not exported in index
+                    const activeAppt = appointments.find(a => a.petId === petId && a.status === 'in_progress');
+                    this.hasActiveAppointment = !!activeAppt;
+                    this.activeAppointmentId = activeAppt ? activeAppt.id : null;
+                    this.cdr.detectChanges();
+                },
+                error: (err) => console.error('[PetDetail] Error checking appointments:', err)
+            });
+        });
     }
 
     viewRecord(recordId: string): void {

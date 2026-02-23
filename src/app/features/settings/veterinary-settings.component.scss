@@ -362,3 +362,15 @@
         }
     }
 }
+
+// Ensure the mat tabs don't cause double scrolling
+::ng-deep .settings-tabs {
+    .mat-mdc-tab-body-wrapper {
+        height: auto !important;
+    }
+
+    .mat-mdc-tab-body-content {
+        overflow: visible !important;
+        min-height: 100%;
+    }
+}

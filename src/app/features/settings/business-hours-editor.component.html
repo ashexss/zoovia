@@ -1,52 +1,53 @@
 <div class="business-hours-editor">
     <form [formGroup]="hoursForm">
-        <div *ngFor="let day of daysOfWeek" class="day-section">
-            <div class="day-header" [formGroupName]="day.key">
-                <mat-slide-toggle formControlName="enabled" (change)="toggleDay(day.key)" color="primary">
-                    <strong>{{ day.label }}</strong>
-                </mat-slide-toggle>
-            </div>
-
-            <div *ngIf="isDayEnabled(day.key)" class="shifts-container" [formGroupName]="day.key">
-                <div formArrayName="shifts">
-                    <div *ngFor="let shift of getShiftsArray(day.key).controls; let i = index" class="shift-row"
-                        [formGroupName]="i">
-
-                        <mat-form-field appearance="outline" class="time-field">
-                            <mat-label>Apertura</mat-label>
-                            <input matInput type="time" formControlName="open">
-                            <mat-icon matPrefix>schedule</mat-icon>
-                        </mat-form-field>
-
-                        <span class="separator">-</span>
-
-                        <mat-form-field appearance="outline" class="time-field">
-                            <mat-label>Cierre</mat-label>
-                            <input matInput type="time" formControlName="close">
-                            <mat-icon matPrefix>schedule</mat-icon>
-                        </mat-form-field>
-
-                        <button mat-icon-button type="button" color="warn" (click)="removeShift(day.key, i)"
-                            [disabled]="getShiftsArray(day.key).length === 1" matTooltip="Eliminar turno">
-                            <mat-icon>delete</mat-icon>
-                        </button>
-
-                        <div *ngIf="validateShiftTimes(day.key, i) as error" class="shift-error">
-                            <mat-icon>error</mat-icon>
-                            {{ error }}
-                        </div>
-                    </div>
+        <div class="days-grid">
+            <div *ngFor="let day of daysOfWeek" class="day-section">
+                <div class="day-header" [formGroupName]="day.key">
+                    <mat-slide-toggle formControlName="enabled" (change)="toggleDay(day.key)" color="primary">
+                        <strong>{{ day.label }}</strong>
+                    </mat-slide-toggle>
                 </div>
 
-                <button mat-stroked-button type="button" color="primary" (click)="addShift(day.key)"
-                    class="add-shift-btn">
-                    <mat-icon>add</mat-icon>
-                    Agregar turno
-                </button>
-            </div>
+                <div *ngIf="isDayEnabled(day.key)" class="shifts-container" [formGroupName]="day.key">
+                    <div formArrayName="shifts">
+                        <div *ngFor="let shift of getShiftsArray(day.key).controls; let i = index" class="shift-row"
+                            [formGroupName]="i">
 
-            <div *ngIf="!isDayEnabled(day.key)" class="closed-message">
-                Cerrado
+                            <mat-form-field appearance="outline" class="time-field" subscriptSizing="dynamic">
+                                <mat-label>Apertura</mat-label>
+                                <input matInput type="time" formControlName="open">
+                                <mat-icon matPrefix>schedule</mat-icon>
+                            </mat-form-field>
+
+                            <span class="separator">-</span>
+
+                            <mat-form-field appearance="outline" class="time-field" subscriptSizing="dynamic">
+                                <mat-label>Cierre</mat-label>
+                                <input matInput type="time" formControlName="close">
+                                <mat-icon matPrefix>schedule</mat-icon>
+                            </mat-form-field>
+
+                            <button mat-icon-button type="button" color="warn" (click)="removeShift(day.key, i)"
+                                [disabled]="getShiftsArray(day.key).length === 1" matTooltip="Eliminar turno">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+
+                            <div *ngIf="validateShiftTimes(day.key, i) as error" class="shift-error">
+                                <mat-icon>error</mat-icon>
+                                {{ error }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button mat-stroked-button type="button" color="primary" (click)="addShift(day.key)"
+                        class="add-shift-btn compact-btn">
+                        <mat-icon>add</mat-icon> Turno
+                    </button>
+                </div>
+
+                <div *ngIf="!isDayEnabled(day.key)" class="closed-message">
+                    Cerrado
+                </div>
             </div>
         </div>
     </form>

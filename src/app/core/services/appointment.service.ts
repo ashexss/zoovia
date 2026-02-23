@@ -134,10 +134,12 @@ export class AppointmentService {
         priority?: 'normal' | 'urgent';
         createdBy: string;
     }): Promise<Appointment> {
+        const timeNow = this.toTimeString(new Date());
         return this.create({
             ...params,
             date: this.toDateString(new Date()),
-            arrivalTime: this.toTimeString(new Date()),
+            arrivalTime: timeNow,
+            scheduledTime: timeNow,
             isWalkIn: true,
             priority: params.priority ?? 'normal',
             status: 'waiting'
@@ -166,7 +168,7 @@ export class AppointmentService {
         // Auto-award loyalty points on completion
         if (status === 'completed') {
             try {
-                const snap = await getDoc(ref);
+                const snap = await runInInjectionContext(this.injector, () => getDoc(ref));
                 if (!snap.exists()) return;
                 const appt = { id: snap.id, ...snap.data() } as Appointment;
                 if (appt.loyaltyAwarded) return; // prevent double-award
@@ -180,7 +182,7 @@ export class AppointmentService {
 
                 // Get client's current balance
                 const clientRef = doc(this.firestore, `veterinaries/${currentUser.veterinaryId}/clients/${appt.clientId}`);
-                const clientSnap = await getDoc(clientRef);
+                const clientSnap = await runInInjectionContext(this.injector, () => getDoc(clientRef));
                 const currentBalance = (clientSnap.data() as any)?.loyaltyPoints ?? 0;
 
                 await this.loyaltyService.awardVisitPoints({

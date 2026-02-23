@@ -63,20 +63,20 @@
                     </mat-card-header>
                     <mat-card-content>
                         <div class="info-row">
-                            <mat-icon [class]="client.notificationPreferences?.email ? 'active' : 'inactive'">
-                                {{ client.notificationPreferences?.email ? 'check_circle' : 'cancel' }}
+                            <mat-icon [class]="client.notificationPreferences.email ? 'active' : 'inactive'">
+                                {{ client.notificationPreferences.email ? 'check_circle' : 'cancel' }}
                             </mat-icon>
                             Email
                         </div>
                         <div class="info-row">
-                            <mat-icon [class]="client.notificationPreferences?.whatsapp ? 'active' : 'inactive'">
-                                {{ client.notificationPreferences?.whatsapp ? 'check_circle' : 'cancel' }}
+                            <mat-icon [class]="client.notificationPreferences.whatsapp ? 'active' : 'inactive'">
+                                {{ client.notificationPreferences.whatsapp ? 'check_circle' : 'cancel' }}
                             </mat-icon>
                             WhatsApp
                         </div>
                         <div class="info-row">
-                            <mat-icon [class]="client.notificationPreferences?.sms ? 'active' : 'inactive'">
-                                {{ client.notificationPreferences?.sms ? 'check_circle' : 'cancel' }}
+                            <mat-icon [class]="client.notificationPreferences.sms ? 'active' : 'inactive'">
+                                {{ client.notificationPreferences.sms ? 'check_circle' : 'cancel' }}
                             </mat-icon>
                             SMS
                         </div>

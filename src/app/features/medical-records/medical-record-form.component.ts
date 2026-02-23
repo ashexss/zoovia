@@ -60,17 +60,15 @@ export class MedicalRecordFormComponent implements OnInit {
 
     recordTypes: { value: MedicalRecordType; label: string }[] = [
         { value: 'consultation', label: 'Consulta' },
-        { value: 'vaccination', label: 'Vacunación' },
         { value: 'surgery', label: 'Cirugía' },
-        { value: 'treatment', label: 'Tratamiento' },
-        { value: 'checkup', label: 'Chequeo' }
+        { value: 'checkup', label: 'Control' }
     ];
 
     ngOnInit(): void {
         this.initForm();
+        this.setupClientChangeListener();
         this.loadData();
         this.checkEditMode();
-        this.setupClientChangeListener();
     }
 
     /**
@@ -79,13 +77,14 @@ export class MedicalRecordFormComponent implements OnInit {
     initForm(): void {
         this.recordForm = this.fb.group({
             clientId: ['', Validators.required],
-            petId: ['', Validators.required],
+            petId: [{ value: '', disabled: true }, Validators.required],
             date: [new Date(), Validators.required],
             type: ['consultation', Validators.required],
-            diagnosis: ['', Validators.required],
-            treatment: ['', Validators.required],
+            diagnosisAndTreatment: ['', Validators.required],
             notes: [''],
-            prescriptions: this.fb.array([])
+            prescriptions: this.fb.array([]),
+            vaccines: this.fb.array([]),
+            deworming: this.fb.array([])
         });
     }
 
@@ -124,6 +123,57 @@ export class MedicalRecordFormComponent implements OnInit {
     }
 
     /**
+     * Get vaccines form array
+     */
+    get vaccines(): FormArray {
+        return this.recordForm.get('vaccines') as FormArray;
+    }
+
+    createVaccineGroup(vaccine?: any): FormGroup {
+        let expDate = vaccine?.expirationDate;
+        if (expDate && expDate.toDate) expDate = expDate.toDate();
+
+        return this.fb.group({
+            name: [vaccine?.name || '', Validators.required],
+            expirationDate: [expDate || null, Validators.required]
+        });
+    }
+
+    addVaccine(): void {
+        this.vaccines.push(this.createVaccineGroup());
+    }
+
+    removeVaccine(index: number): void {
+        this.vaccines.removeAt(index);
+    }
+
+    /**
+     * Get deworming form array
+     */
+    get deworming(): FormArray {
+        return this.recordForm.get('deworming') as FormArray;
+    }
+
+    createDewormingGroup(deworm?: any): FormGroup {
+        let expDate = deworm?.expirationDate;
+        if (expDate && expDate.toDate) expDate = expDate.toDate();
+
+        return this.fb.group({
+            name: [deworm?.name || '', Validators.required],
+            type: [deworm?.type || 'both', Validators.required],
+            expirationDate: [expDate || null, Validators.required]
+        });
+    }
+
+    addDeworming(): void {
+        this.deworming.push(this.createDewormingGroup());
+    }
+
+    removeDeworming(index: number): void {
+        this.deworming.removeAt(index);
+    }
+
+    /**
      * Load clients and pets
      */
     loadData(): void {
@@ -137,6 +187,24 @@ export class MedicalRecordFormComponent implements OnInit {
                 this.clients = clients;
                 this.pets = pets.filter(p => p.isActive);
                 this.loadingData = false;
+
+                // Pre-fill from query params if available and not in edit mode
+                if (!this.isEditMode) {
+                    const params = this.route.snapshot.queryParamMap;
+                    const clientId = params.get('clientId');
+                    const petId = params.get('petId');
+
+                    if (clientId) {
+                        this.recordForm.patchValue({ clientId });
+                        // setupClientChangeListener will trigger and filter pets, then we can patch petId
+                        if (petId) {
+                            // Small timeout to allow the pets to filter first
+                            setTimeout(() => {
+                                this.recordForm.patchValue({ petId });
+                            }, 0);
+                        }
+                    }
+                }
             },
             error: (error) => {
                 console.error('Error loading data:', error);
@@ -153,6 +221,7 @@ export class MedicalRecordFormComponent implements OnInit {
         this.recordForm.get('clientId')?.valueChanges.subscribe(clientId => {
             if (clientId) {
                 this.filteredPets = this.pets.filter(pet => pet.clientId === clientId);
+                this.recordForm.get('petId')?.enable();
                 // Reset pet selection if current pet doesn't belong to selected client
                 const currentPetId = this.recordForm.get('petId')?.value;
                 if (currentPetId && !this.filteredPets.find(p => p.id === currentPetId)) {
@@ -161,6 +230,7 @@ export class MedicalRecordFormComponent implements OnInit {
             } else {
                 this.filteredPets = [];
                 this.recordForm.patchValue({ petId: '' });
+                this.recordForm.get('petId')?.disable();
             }
         });
     }
@@ -184,6 +254,13 @@ export class MedicalRecordFormComponent implements OnInit {
         this.recordService.getRecordById(id).subscribe({
             next: (record) => {
                 if (record) {
+                    // Update form patching logic
+                    this.recordForm.patchValue({ clientId: record.clientId });
+                    // Small timeout to allow the clientListener to filter the pets list
+                    setTimeout(() => {
+                        this.recordForm.patchValue({ petId: record.petId });
+                    }, 0);
+
                     // Convert Timestamp to Date
                     const formData = {
                         ...record,
@@ -194,6 +271,20 @@ export class MedicalRecordFormComponent implements OnInit {
                     if (record.prescriptions && record.prescriptions.length > 0) {
                         record.prescriptions.forEach(prescription => {
                             this.prescriptions.push(this.createPrescriptionGroup(prescription));
+                        });
+                    }
+
+                    // Load vaccines
+                    if (record.vaccines && record.vaccines.length > 0) {
+                        record.vaccines.forEach(vaccine => {
+                            this.vaccines.push(this.createVaccineGroup(vaccine));
+                        });
+                    }
+
+                    // Load deworming
+                    if (record.deworming && record.deworming.length > 0) {
+                        record.deworming.forEach(deworm => {
+                            this.deworming.push(this.createDewormingGroup(deworm));
                         });
                     }
 
@@ -222,12 +313,26 @@ export class MedicalRecordFormComponent implements OnInit {
         this.saving = true;
 
         try {
-            const formValue = this.recordForm.value;
+            // Use getRawValue() to include fields that might be disabled (like petId)
+            const formValue = this.recordForm.getRawValue();
+
+            // Format form array dates to Timestamp
+            const vaccines = formValue.vaccines ? formValue.vaccines.map((v: any) => ({
+                ...v,
+                expirationDate: v.expirationDate ? Timestamp.fromDate(v.expirationDate) : null
+            })) : [];
+
+            const deworming = formValue.deworming ? formValue.deworming.map((d: any) => ({
+                ...d,
+                expirationDate: d.expirationDate ? Timestamp.fromDate(d.expirationDate) : null
+            })) : [];
 
             // Convert Date to Timestamp
             const recordData: Partial<MedicalRecord> = {
                 ...formValue,
-                date: Timestamp.fromDate(formValue.date)
+                date: Timestamp.fromDate(formValue.date),
+                vaccines,
+                deworming
             };
 
             if (this.isEditMode && this.recordId) {
@@ -237,8 +342,11 @@ export class MedicalRecordFormComponent implements OnInit {
                 await this.recordService.createRecord(recordData);
                 alert('Registro creado exitosamente');
             }
-
-            this.router.navigate(['/dashboard/medical-records']);
+            if (formValue.petId) {
+                this.router.navigate(['/dashboard/pets', formValue.petId]);
+            } else {
+                this.router.navigate(['/dashboard/medical-records']);
+            }
         } catch (error) {
             console.error('Error saving record:', error);
             alert('Error al guardar el registro');
@@ -251,7 +359,12 @@ export class MedicalRecordFormComponent implements OnInit {
      * Cancel and go back
      */
     onCancel(): void {
-        this.router.navigate(['/dashboard/medical-records']);
+        const petId = this.recordForm.getRawValue().petId;
+        if (petId) {
+            this.router.navigate(['/dashboard/pets', petId]);
+        } else {
+            this.router.navigate(['/dashboard/medical-records']);
+        }
     }
 
     /**

@@ -164,13 +164,8 @@
 }
 
 .record-card {
-    cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
-
-    &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
+    border: 1px solid #eef2f6;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 
     .record-header {
         display: flex;

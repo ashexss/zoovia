@@ -284,8 +284,8 @@
                 </button>
                 }
                 }
-                <button mat-button (click)="navigateToMedicalRecord(selectedAppointment)">
-                    <mat-icon>medical_services</mat-icon> Ver historial
+                <button mat-button [routerLink]="['/dashboard/pets', selectedAppointment.petId]">
+                    <mat-icon>pets</mat-icon> Ver Detalle de Mascota
                 </button>
                 @if (!['completed', 'cancelled', 'no_show'].includes(selectedAppointment.status)) {
                 <button mat-button color="warn" (click)="markCancelled(selectedAppointment)">

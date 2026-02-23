@@ -55,6 +55,66 @@
             ]
         },
         {
+            "collectionGroup": "loyalty_transactions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "clientId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "medicalRecords",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "petId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "medicalRecords",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "clientId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "medicalRecords",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "veterinaryId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "petId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "date",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
             "collectionGroup": "medicalRecords",
             "queryScope": "COLLECTION_GROUP",
             "fields": [
