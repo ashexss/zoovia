@@ -97,7 +97,7 @@ export class SubscriptionOverviewComponent implements OnChanges {
 
     get planDisplayName(): string {
         const plan = this.subscription?.plan;
-        if (plan === 'zoovia') return 'Plan Zoovia';
+        if (plan === 'zoovia_plan') return 'Plan Zoovia';
         if (plan === 'base_vet') return 'Plan Base Veterinaria';
         if (plan === 'complete_vet') return 'Plan Completo';
         if (plan === 'custom') return 'Plan Personalizado';
@@ -140,11 +140,11 @@ export class SubscriptionOverviewComponent implements OnChanges {
 
     /**
      * Módulos que están incluidos en el plan actual (se muestran como chips verdes).
-     * Si el plan es 'zoovia', se determinan por `includedInBase`.
+     * Si el plan es 'zoovia_plan', se determinan por `includedInBase`.
      * Si el plan es otro, se muestran los que estén activos en subscription.modules.
      */
     get includedModules(): ModuleInfo[] {
-        if (this.subscription?.plan === 'zoovia') {
+        if (this.subscription?.plan === 'zoovia_plan') {
             return this.allModules.filter(m => m.includedInBase);
         }
         return this.allModules.filter(m => this.isModuleActive(m.key));

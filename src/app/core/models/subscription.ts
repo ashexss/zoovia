@@ -14,7 +14,7 @@ export enum BusinessType {
  * - 'custom'          → Módulos a medida
  */
 export type SubscriptionPlan =
-    | 'zoovia'
+    | 'zoovia_plan'
     | 'base_vet'
     | 'base_grooming'
     | 'complete_vet'

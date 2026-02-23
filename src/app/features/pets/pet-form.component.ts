@@ -13,7 +13,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Timestamp } from '@angular/fire/firestore';
 
-import { Pet, Client, PetSpecies, PetGender } from '../../core/models';
+import { Pet, Client, PetSpecies, PetGender, PetNeuteredStatus } from '../../core/models';
 import { PetService, ClientService } from '../../core/services';
 
 @Component({
@@ -65,6 +65,12 @@ export class PetFormComponent implements OnInit {
         { value: 'female', label: 'Hembra' }
     ];
 
+    isNeuteredOptions: { value: PetNeuteredStatus; label: string }[] = [
+        { value: 'yes', label: 'Sí' },
+        { value: 'no', label: 'No' },
+        { value: 'unknown', label: 'No lo sé' }
+    ];
+
     ngOnInit(): void {
         this.initForm();
         this.loadClients();
@@ -88,6 +94,7 @@ export class PetFormComponent implements OnInit {
             species: ['dog', Validators.required],
             breed: ['', Validators.required],
             gender: ['male', Validators.required],
+            isNeutered: ['unknown', Validators.required],
             birthDate: [new Date(), Validators.required],
             weight: [null, [Validators.required, Validators.min(0.1)]],
             color: [''],

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -32,6 +32,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     private veterinaryService = inject(VeterinaryService);
     private navigationService = inject(NavigationService);
     private router = inject(Router);
+    private ngZone = inject(NgZone);
+    private cdr = inject(ChangeDetectorRef);
 
     currentUser$ = this.authService.currentUser$;
     veterinary$ = this.veterinaryService.getCurrentVeterinary();
@@ -43,9 +45,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
     ngOnInit() {
         this.menuItems$ = this.navigationService.getMenuItems();
         // Update time every minute
-        this.timerInterval = setInterval(() => {
-            this.currentDate = new Date();
-        }, 60000);
+        this.ngZone.runOutsideAngular(() => {
+            this.timerInterval = setInterval(() => {
+                this.currentDate = new Date();
+                this.cdr.detectChanges();
+            }, 60000);
+        });
     }
 
     ngOnDestroy() {

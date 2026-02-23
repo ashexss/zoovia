@@ -55,6 +55,11 @@
                             <span class="value">{{ pet.gender === 'male' ? 'Macho' : 'Hembra' }}</span>
                         </div>
                         <div class="info-row">
+                            <span class="label">Castrado</span>
+                            <span class="value">{{ pet.isNeutered === 'yes' ? 'Sí' : (pet.isNeutered === 'no' ? 'No' :
+                                'Desconocido/No cargado') }}</span>
+                        </div>
+                        <div class="info-row">
                             <span class="label">Peso</span>
                             <span class="value">{{ pet.weight ? pet.weight + ' kg' : 'No registrado' }}</span>
                         </div>

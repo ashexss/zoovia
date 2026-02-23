@@ -193,6 +193,7 @@ export interface LoyaltyProgram {
 // Pet species and gender types
 export type PetSpecies = 'dog' | 'cat' | 'bird' | 'rabbit' | 'other';
 export type PetGender = 'male' | 'female';
+export type PetNeuteredStatus = 'yes' | 'no' | 'unknown';
 
 // Pet interface
 export interface Pet {
@@ -203,6 +204,7 @@ export interface Pet {
     species: PetSpecies;
     breed: string;
     gender: PetGender;
+    isNeutered?: PetNeuteredStatus;
     birthDate: Timestamp;
     weight: number;
     color: string;

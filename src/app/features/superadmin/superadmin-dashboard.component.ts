@@ -58,7 +58,7 @@ export class SuperadminDashboardComponent implements OnInit {
 
     buildForm() {
         const controls: Record<string, any> = {
-            plan: ['zoovia'],
+            plan: ['zoovia_plan'],
             status: ['active'],
             monthlyPrice: [59900, [Validators.required, Validators.min(0)]],
             billingCycle: ['monthly'],
@@ -112,9 +112,9 @@ export class SuperadminDashboardComponent implements OnInit {
         }
     }
 
-    /** When plan changes to 'zoovia', auto-fill modules */
+    /** When plan changes to 'zoovia_plan', auto-fill modules */
     onPlanChange(plan: SubscriptionPlan) {
-        if (plan === 'zoovia') {
+        if (plan === 'zoovia_plan') {
             this.subForm.patchValue({ monthlyPrice: 59900 });
             for (const mod of this.allModules) {
                 this.subForm.patchValue({
@@ -179,7 +179,7 @@ export class SuperadminDashboardComponent implements OnInit {
     }
 
     getPlanLabel(plan?: string): string {
-        if (plan === 'zoovia') return 'Zoovia';
+        if (plan === 'zoovia_plan') return 'Zoovia';
         if (plan === 'base_vet') return 'Base';
         if (plan === 'custom') return 'Custom';
         return plan ?? '—';

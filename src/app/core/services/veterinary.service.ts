@@ -174,7 +174,7 @@ export class VeterinaryService {
      */
     async ensureSubscription(id: string): Promise<void> {
         const vetDoc = doc(this.firestore, 'veterinaries', id);
-        const snapshot = await getDoc(vetDoc);
+        const snapshot = await runInInjectionContext(this.injector, () => getDoc(vetDoc));
         if (!snapshot.exists()) return;
 
         const data = snapshot.data() as any;
@@ -184,19 +184,19 @@ export class VeterinaryService {
         const { BusinessType } = await import('../models/subscription');
 
         const placeholderSub = {
-            plan: 'base_vet',
+            plan: 'zoovia_plan',
             businessType: data?.businessType ?? BusinessType.VETERINARY,
             modules: {
                 clients: true,
                 pets: true,
                 medicalRecords: true,
-                appointments: false,
-                loyalty: false,
+                appointments: true,
+                loyalty: true,
                 grooming: false,
                 inventory: false,
             },
             billingCycle: 'monthly',
-            monthlyPrice: 0,
+            monthlyPrice: 59900,
             currency: 'ARS',
             status: 'active',
             billingContactEmail: data?.email ?? '',

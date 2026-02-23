@@ -15,7 +15,7 @@ export class SubscriptionService {
      */
     private readonly PRICES = {
         PLANS: {
-            zoovia: 59900,          // Plan único todo incluido (ARS)
+            zoovia_plan: 59900,          // Plan único todo incluido (ARS)
             base_vet: 15,
             base_grooming: 12,
             complete_vet: 35,
@@ -58,7 +58,7 @@ export class SubscriptionService {
      * For Plan Zoovia returns the fixed ARS price.
      */
     calculatePrice(plan: SubscriptionPlan, modules: SubscriptionModules): number {
-        if (plan === 'zoovia') return this.PRICES.PLANS.zoovia;
+        if (plan === 'zoovia_plan') return this.PRICES.PLANS.zoovia_plan;
         if (plan === 'complete_vet') return this.PRICES.PLANS.complete_vet;
         if (plan === 'complete_grooming') return this.PRICES.PLANS.complete_grooming;
 
@@ -74,7 +74,7 @@ export class SubscriptionService {
     /** Returns true if the vet is on the Zoovia all-inclusive plan */
     isPlanZoovia(): Observable<boolean> {
         return this.veterinaryService.getCurrentVeterinary().pipe(
-            map(vet => vet?.subscription?.plan === 'zoovia')
+            map(vet => vet?.subscription?.plan === 'zoovia_plan')
         );
     }
 

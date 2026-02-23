@@ -89,6 +89,18 @@
                         <mat-error>{{ getErrorMessage('gender') }}</mat-error>
                         }
                     </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="form-field">
+                        <mat-label>¿Castrado?</mat-label>
+                        <mat-select formControlName="isNeutered">
+                            @for (opt of isNeuteredOptions; track opt.value) {
+                            <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                            }
+                        </mat-select>
+                        @if (petForm.get('isNeutered')?.invalid && petForm.get('isNeutered')?.touched) {
+                        <mat-error>{{ getErrorMessage('isNeutered') }}</mat-error>
+                        }
+                    </mat-form-field>
                 </div>
 
                 <div class="form-row">

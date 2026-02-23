@@ -148,8 +148,11 @@ import { take, catchError, debounceTime, distinctUntilChanged } from 'rxjs/opera
                 <div class="appt-list">
                   <div *ngFor="let record of yesterdayRecords" class="appt-row record-row" (click)="navigateTo('/dashboard/clients/' + record.clientId)">
                     <div class="appt-info">
-                      <span class="appt-pet">{{ record.diagnosisAndTreatment || 'Atención general' }}</span>
-                      <span class="appt-client">{{ record.date.toDate() | date:'shortTime' }}</span>
+                      <span class="appt-pet">
+                        {{ $any(record).petName || 'Cargando...' }} 
+                        <span style="font-weight:normal; color:#666; font-size:12px"> — {{ record.diagnosisAndTreatment || 'Consulta general' }}</span>
+                      </span>
+                      <span class="appt-client">{{ $any(record).clientName || 'Cargando...' }} • {{ record.date.toDate() | date:'shortTime' }}</span>
                     </div>
                     <mat-icon class="go-icon">chevron_right</mat-icon>
                   </div>
@@ -236,6 +239,7 @@ import { take, catchError, debounceTime, distinctUntilChanged } from 'rxjs/opera
 })
 export class DashboardHomeComponent implements OnInit, OnDestroy {
   private clientService = inject(ClientService);
+  private petService = inject(PetService);
   private recordService = inject(MedicalRecordService);
   private vetService = inject(VeterinaryService);
   private apptService = inject(AppointmentService);
@@ -304,7 +308,11 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
   private loadTodayAppointments(vetId: string) {
     this.loadingAppts = true;
     this.apptService.getTodayAppointments(vetId).subscribe({
-      next: appts => { this.todayAppointments = appts; this.loadingAppts = false; this.cdr.detectChanges(); },
+      next: appts => {
+        this.todayAppointments = appts.filter(a => a.status !== 'completed' && a.status !== 'cancelled');
+        this.loadingAppts = false;
+        this.cdr.detectChanges();
+      },
       error: () => { this.loadingAppts = false; this.cdr.detectChanges(); }
     });
   }
@@ -322,6 +330,19 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
         const d = r.date.toDate();
         return d < now; // Any old record is considered past (mocking for UX)
       }).slice(0, 3);
+
+      // Enrich with client and pet names
+      this.yesterdayRecords.forEach((r: any) => {
+        this.clientService.getClientById(r.clientId).pipe(take(1)).subscribe((c: any) => {
+          if (c) r.clientName = `${c.firstName} ${c.lastName}`;
+          this.cdr.detectChanges();
+        });
+        this.petService.getPetById(r.petId).pipe(take(1)).subscribe((p: any) => {
+          if (p) r.petName = p.name;
+          this.cdr.detectChanges();
+        });
+      });
+
       this.loadingRecords = false;
       this.cdr.detectChanges();
     });

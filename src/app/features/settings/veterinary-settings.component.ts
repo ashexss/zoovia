@@ -113,7 +113,9 @@ export class VeterinarySettingsComponent implements OnInit {
     }
 
     loadVeterinary(): void {
-        this.loading = true;
+        if (!this.veterinary) {
+            this.loading = true;
+        }
         this.hasPermissionError = false;
 
         this.veterinaryService.getCurrentVeterinary().subscribe({
@@ -295,16 +297,18 @@ export class VeterinarySettingsComponent implements OnInit {
             // Update veterinary
             await this.veterinaryService.updateVeterinary(this.veterinary.id, updateData);
 
-            this.snackBar.open('Cambios guardados exitosamente', 'Cerrar', { duration: 3000 });
             this.selectedLogoFile = undefined;
             this.saving = false;
+            this.cdr.detectChanges();
+            this.snackBar.open('Cambios guardados exitosamente', 'Cerrar', { duration: 3000 });
 
             // Reload data
             this.loadVeterinary();
         } catch (error) {
             console.error('Error saving changes:', error);
-            this.snackBar.open('Error al guardar los cambios', 'Cerrar', { duration: 3000 });
             this.saving = false;
+            this.cdr.detectChanges();
+            this.snackBar.open('Error al guardar los cambios', 'Cerrar', { duration: 3000 });
         }
     }
 
